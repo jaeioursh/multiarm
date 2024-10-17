@@ -1,0 +1,8 @@
+<mujoco model="actb">
+<general class="size3" name="B_shoulder_pan" joint="B_shoulder_pan_joint"/>
+<general class="size3" name="B_shoulder_lift" joint="B_shoulder_lift_joint"/>
+<general class="size3_limited" name="B_elbow" joint="B_elbow_joint"/>
+<general class="size1" name="B_wrist_1" joint="B_wrist_1_joint"/>
+<general class="size1" name="B_wrist_2" joint="B_wrist_2_joint"/>
+<general class="size1" name="B_wrist_3" joint="B_wrist_3_joint"/>
+</mujoco>

@@ -1,0 +1,8 @@
+<mujoco model="actc">
+<general class="size3" name="C_shoulder_pan" joint="C_shoulder_pan_joint"/>
+<general class="size3" name="C_shoulder_lift" joint="C_shoulder_lift_joint"/>
+<general class="size3_limited" name="C_elbow" joint="C_elbow_joint"/>
+<general class="size1" name="C_wrist_1" joint="C_wrist_1_joint"/>
+<general class="size1" name="C_wrist_2" joint="C_wrist_2_joint"/>
+<general class="size1" name="C_wrist_3" joint="C_wrist_3_joint"/>
+</mujoco>

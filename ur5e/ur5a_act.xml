@@ -1,0 +1,8 @@
+<mujoco model="acta">
+<general class="size3" name="A_shoulder_pan" joint="A_shoulder_pan_joint"/>
+<general class="size3" name="A_shoulder_lift" joint="A_shoulder_lift_joint"/>
+<general class="size3_limited" name="A_elbow" joint="A_elbow_joint"/>
+<general class="size1" name="A_wrist_1" joint="A_wrist_1_joint"/>
+<general class="size1" name="A_wrist_2" joint="A_wrist_2_joint"/>
+<general class="size1" name="A_wrist_3" joint="A_wrist_3_joint"/>
+</mujoco>
