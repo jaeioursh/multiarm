@@ -43,5 +43,7 @@ class armsim:
 
 if __name__ =="__main__":
 	sim=armsim(1)
+	state=sim.reset()
 	for i in range(1000):
-		sim.step([1]*18)
+		action=[1]*18
+		state,reward=sim.step(action)
