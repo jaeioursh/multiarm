@@ -1,0 +1,8 @@
+<mujoco model="actuator1">
+        <motor name="Bjoint1_motor" joint="Bjoint1" gear="1.2"/>
+        <motor name="Bjoint2_motor" joint="Bjoint2"/>
+        <motor name="Bjoint3_motor" joint="Bjoint3"/>
+        <motor name="Bjoint4_motor" joint="Bjoint4"/>
+        <motor name="Bjoint5_motor" joint="Bjoint5"/>
+        <motor name="Bjoint6_motor" joint="Bjoint6"/>
+</mujoco>

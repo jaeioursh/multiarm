@@ -1,0 +1,110 @@
+<mujoco model="arm1">
+        <body name="Abase_link" pos="-0.175 0.175 0" quat="0.3826834324 0 0 0.9238795325" >
+            <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="4" diaginertia="0.0072 0.00443333 0.00443333" />
+            <geom name="Abase_mesh" type="mesh" mesh="base" material="RobMat" />
+            <geom name="Abase_cap" type="cylinder" pos="0 0 0.14" size="0.06 0.02" rgba="0.596 0.96 1 1" material="RobMat" contype="0" conaffinity="0" />
+
+            <body name="Ashoulder_link" pos="0 0 0.089159">
+                <inertial pos="0 0 0" mass="3.7" diaginertia="0.0102675 0.0102675 0.00666" />
+                <geom name="Ashoulder_mesh" type="mesh" mesh="shoulder" material="RobMat" />
+                <geom name="Ashoulder_cap" type="cylinder" pos="0 0.185 0" quat="0.707107 0.707107 0 0" size="0.06 0.02" rgba="0.596 0.96 1 1" material="RobMat" contype="0" conaffinity="0" />
+                <joint name="Ajoint1" pos="0 0 0" axis="0 0 1" />
+
+                <body name="Aupper_arm_link" pos="0 0.13585 0" quat="0.707107 0 0.707107 0">
+                    <inertial pos="0 0 0.28" mass="8.393" diaginertia="0.226891 0.226891 0.0151074" />
+                    <geom name="Aupperarm_mesh" type="mesh" mesh="upperarm" material="RobMat" />
+                    <joint name="Ajoint2" pos="0 0 0" axis="0 1 0" />
+
+                    <body name="Aforearm_link" pos="0 -0.1197 0.425">
+                        <inertial pos="0 0 0.25" mass="2.275" diaginertia="0.0494433 0.0494433 0.004095" />
+                        <geom name="Aforearm_mesh" type="mesh" mesh="forearm" material="RobMat" />
+
+                        <!--camera name="Aforearm_camera" pos="0 0.1 0.07" euler="3.14159265 0 1.570796" /-->
+
+                        <geom name="Aforearm_cap" type="cylinder" pos="0 0.17 0" quat="0.707107 0.707107 0 0" size="0.06 0.02" rgba="0.596 0.96 1 1" material="RobMat" contype="0" conaffinity="0" />
+                        <joint name="Ajoint3" pos="0 0 0" axis="0 1 0" />
+
+                        <body name="Awrist1_link" pos="0 0 0.39225" quat="0.707107 0 0.707107 0">
+                            <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="1.219" diaginertia="0.21942 0.111173 0.111173" />
+                            <geom name="Awrist1_mesh" type="mesh" mesh="wrist1" material="RobMat" />
+                            <geom name="Awrist1_cap" type="cylinder" pos="0 -0.045 0" quat="0.707107 0.707107 0 0" size="0.04 0.015" rgba="0.596 0.96 1 1" material="RobMat" contype="0" conaffinity="0" />
+                            <joint name="Ajoint4" pos="0 0 0" axis="0 1 0" />
+
+                            <body name="Awrist2_link" pos="0 0.093 0">
+                                <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="1.219" diaginertia="0.21942 0.111173 0.111173" />
+                                <geom name="Awrist2_mesh" type="mesh" mesh="wrist2" material="RobMat" />
+                                <geom name="Awrist2_cap" type="cylinder" pos="0 0 -0.045" quat="0.707107 0 0 0.707107" size="0.04 0.015" rgba="0.596 0.96 1 1" material="RobMat" contype="0" conaffinity="0" />
+                                <joint name="Ajoint5" pos="0 0 0" axis="0 0 1" />
+
+                                <body name="Awrist3_link" pos="0 0 0.09465" quat="0.707107 0 -0.707107 0" >
+                                    <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="0.1879" diaginertia="0.033822 0.0171365 0.0171365" />
+                                    <geom name="Awrist3_mesh" type="mesh" mesh="wrist3" material="RobMat" contype="1" conaffinity="1" />
+                                    <geom name="Awrist3_cap" type="cylinder" pos="0 -0.045 0" quat="0.707107 0.707107 0 0" size="0.04 0.015" rgba="0.596 0.96 1 1" material="RobMat" contype="0" conaffinity="0" />
+                                    <joint name="Ajoint6" pos="0 0 0" axis="0 1 0" />
+
+                                    <body name="Aee_link" pos="0 0.0823 0" quat="0.707107 -0.707107 0 0">
+                                        <inertial pos="0 0.0823 0" quat="0.707107 -0.707107 0 0" mass="0" diaginertia="0 0 0" />
+
+                                        <!--camera name="Agripper_camera" euler="0 3.14159265 0" fovy="63.5" /-->
+                                        <geom name="Alight_1" type="sphere" size="0.005" pos="0.035 0 0.0166" material="Light" />
+                                        <geom name="Alight_2" type="sphere" size="0.005" pos="-0.035 0 0.0166" material="Light" />
+                                        <geom name="Akinova_robotiq_coupler_mesh" type="mesh" mesh="kinova_robotiq_coupler" pos="0 0 0.0466" material="GriMat" />
+                                        <geom name="Arobotiq_85_base_link_mesh" type="mesh" mesh="robotiq_85_base_link" pos="0 0 0.0016" quat="0.707107 0 -0.707107 0" material="GriMat" />
+
+                                        <body name="Aright_driver" pos="0 -0.0306011 0.054904" quat="0.707107 0 -0.707107 0">
+                                            <geom name="Aright_driver_mesh" type="mesh" mesh="robotiq_85_knuckle_link" material="GriMat" contype="0" conaffinity="0" />
+                                            <joint name="Ajoint7_1" axis="0 0 1" type="hinge" limited="true" range="0 0.872664626" />
+
+                                        
+                                            <body name="Aright_coupler" pos="0 -0.0315 0">
+                                                <geom name="Aright_coupler_mesh" type="mesh" mesh="robotiq_85_finger_link" material="GriMat" contype="0" conaffinity="0" />
+                                                <joint name="Ajoint8_1" axis="0 0 1" type="hinge" limited="true" range="0 2.967059728" />
+
+                                                <body name="Aright_follower_link" pos="0.0475 -0.006 0">
+                                                    <geom name="Aright_follower_mesh" pos="0.0025 0.021 0" type="mesh" mesh="robotiq_85_finger_tip_link" material="GriMat" />
+                                                    <joint name="Ajoint9_1" axis="0 0 1" type="hinge" limited="true" range="0 2.967059728" />
+                                                </body>
+
+                                            </body>
+
+                                        </body>
+
+                                        <body name="Aright_spring_link" pos="0.0016 -0.012 0.0614" quat="0.707107 0 -0.707107 0">
+                                            <geom name="Aright_spring_mesh" type="mesh" pos="0 -0.0005 0.0016" mesh="robotiq_85_inner_knuckle_link" material="GriMat" contype="0" conaffinity="0" />
+                                            <joint name="Ajoint10_1" axis="0 0 1" type="hinge" limited="true" range="0 1" />
+                                        </body>
+
+
+                                        <body name="Aleft_driver" pos="0 0.0306011 0.054904" quat="0 0.707107 0 0.707107">
+                                            <geom name="Aleft_driver_mesh" type="mesh" mesh="robotiq_85_knuckle_link" material="GriMat" contype="0" conaffinity="0" />
+                                            <joint name="Ajoint7_2" axis="0 0 1" type="hinge" limited="true" range="0 0.872664626" />
+
+                                        
+                                            <body name="Aleft_coupler" pos="0 -0.0315 0">
+                                                <geom name="Aleft_coupler_mesh" type="mesh" mesh="robotiq_85_finger_link" material="GriMat" contype="0" conaffinity="0" />
+                                                <joint name="Ajoint8_2" axis="0 0 1" type="hinge" limited="true" range="0 2.967059728" />
+
+                                                <body name="Aleft_follower_link" pos="0.0475 -0.006 0">
+                                                    <geom name="Aleft_follower_mesh" pos="0.0025 0.021 0" type="mesh" mesh="robotiq_85_finger_tip_link" material="GriMat" />
+                                                    <joint name="Ajoint9_2" axis="0 0 1" type="hinge" limited="true" range="0 2.967059728" />
+                                                </body>
+
+                                            </body>
+
+                                        </body>
+
+                                        <body name="Aleft_spring_link" pos="0.0016 0.012 0.0614" quat="0 0.707107 0 0.707107">
+                                            <geom name="Aleft_spring_mesh" type="mesh" pos="0 0.0005 0.0016" mesh="robotiq_85_inner_knuckle_link" material="GriMat" contype="0" conaffinity="0" />
+                                            <joint name="Ajoint10_2" axis="0 0 1" type="hinge" limited="true" range="0 1" />
+                                        </body>
+
+                                    </body>
+                                </body>
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+        </body>
+
+</mujoco>

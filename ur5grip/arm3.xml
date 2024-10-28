@@ -1,0 +1,110 @@
+<mujoco model="arm1">
+        <body name="Cbase_link" pos="-0.175 0.175 0" quat="0.3826834324 0 0 0.9238795325" >
+            <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="4" diaginertia="0.0072 0.00443333 0.00443333" />
+            <geom name="Cbase_mesh" type="mesh" mesh="base" material="RobMat" />
+            <geom name="Cbase_cap" type="cylinder" pos="0 0 0.14" size="0.06 0.02" rgba="0.596 0.96 1 1" material="RobMat" contype="0" conaffinity="0" />
+
+            <body name="Cshoulder_link" pos="0 0 0.089159">
+                <inertial pos="0 0 0" mass="3.7" diaginertia="0.0102675 0.0102675 0.00666" />
+                <geom name="Cshoulder_mesh" type="mesh" mesh="shoulder" material="RobMat" />
+                <geom name="Cshoulder_cap" type="cylinder" pos="0 0.185 0" quat="0.707107 0.707107 0 0" size="0.06 0.02" rgba="0.596 0.96 1 1" material="RobMat" contype="0" conaffinity="0" />
+                <joint name="Cjoint1" pos="0 0 0" axis="0 0 1" />
+
+                <body name="Cupper_arm_link" pos="0 0.13585 0" quat="0.707107 0 0.707107 0">
+                    <inertial pos="0 0 0.28" mass="8.393" diaginertia="0.226891 0.226891 0.0151074" />
+                    <geom name="Cupperarm_mesh" type="mesh" mesh="upperarm" material="RobMat" />
+                    <joint name="Cjoint2" pos="0 0 0" axis="0 1 0" />
+
+                    <body name="Cforearm_link" pos="0 -0.1197 0.425">
+                        <inertial pos="0 0 0.25" mass="2.275" diaginertia="0.0494433 0.0494433 0.004095" />
+                        <geom name="Cforearm_mesh" type="mesh" mesh="forearm" material="RobMat" />
+
+                        <!--camera name="Cforearm_camera" pos="0 0.1 0.07" euler="3.14159265 0 1.570796" /-->
+
+                        <geom name="Cforearm_cap" type="cylinder" pos="0 0.17 0" quat="0.707107 0.707107 0 0" size="0.06 0.02" rgba="0.596 0.96 1 1" material="RobMat" contype="0" conaffinity="0" />
+                        <joint name="Cjoint3" pos="0 0 0" axis="0 1 0" />
+
+                        <body name="Cwrist1_link" pos="0 0 0.39225" quat="0.707107 0 0.707107 0">
+                            <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="1.219" diaginertia="0.21942 0.111173 0.111173" />
+                            <geom name="Cwrist1_mesh" type="mesh" mesh="wrist1" material="RobMat" />
+                            <geom name="Cwrist1_cap" type="cylinder" pos="0 -0.045 0" quat="0.707107 0.707107 0 0" size="0.04 0.015" rgba="0.596 0.96 1 1" material="RobMat" contype="0" conaffinity="0" />
+                            <joint name="Cjoint4" pos="0 0 0" axis="0 1 0" />
+
+                            <body name="Cwrist2_link" pos="0 0.093 0">
+                                <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="1.219" diaginertia="0.21942 0.111173 0.111173" />
+                                <geom name="Cwrist2_mesh" type="mesh" mesh="wrist2" material="RobMat" />
+                                <geom name="Cwrist2_cap" type="cylinder" pos="0 0 -0.045" quat="0.707107 0 0 0.707107" size="0.04 0.015" rgba="0.596 0.96 1 1" material="RobMat" contype="0" conaffinity="0" />
+                                <joint name="Cjoint5" pos="0 0 0" axis="0 0 1" />
+
+                                <body name="Cwrist3_link" pos="0 0 0.09465" quat="0.707107 0 -0.707107 0" >
+                                    <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="0.1879" diaginertia="0.033822 0.0171365 0.0171365" />
+                                    <geom name="Cwrist3_mesh" type="mesh" mesh="wrist3" material="RobMat" contype="1" conaffinity="1" />
+                                    <geom name="Cwrist3_cap" type="cylinder" pos="0 -0.045 0" quat="0.707107 0.707107 0 0" size="0.04 0.015" rgba="0.596 0.96 1 1" material="RobMat" contype="0" conaffinity="0" />
+                                    <joint name="Cjoint6" pos="0 0 0" axis="0 1 0" />
+
+                                    <body name="Cee_link" pos="0 0.0823 0" quat="0.707107 -0.707107 0 0">
+                                        <inertial pos="0 0.0823 0" quat="0.707107 -0.707107 0 0" mass="0" diaginertia="0 0 0" />
+
+                                        <!--camera name="Cgripper_camera" euler="0 3.14159265 0" fovy="63.5" /-->
+                                        <geom name="Clight_1" type="sphere" size="0.005" pos="0.035 0 0.0166" material="Light" />
+                                        <geom name="Clight_2" type="sphere" size="0.005" pos="-0.035 0 0.0166" material="Light" />
+                                        <geom name="Ckinova_robotiq_coupler_mesh" type="mesh" mesh="kinova_robotiq_coupler" pos="0 0 0.0466" material="GriMat" />
+                                        <geom name="Crobotiq_85_base_link_mesh" type="mesh" mesh="robotiq_85_base_link" pos="0 0 0.0016" quat="0.707107 0 -0.707107 0" material="GriMat" />
+
+                                        <body name="Cright_driver" pos="0 -0.0306011 0.054904" quat="0.707107 0 -0.707107 0">
+                                            <geom name="Cright_driver_mesh" type="mesh" mesh="robotiq_85_knuckle_link" material="GriMat" contype="0" conaffinity="0" />
+                                            <joint name="Cjoint7_1" axis="0 0 1" type="hinge" limited="true" range="0 0.872664626" />
+
+                                        
+                                            <body name="Cright_coupler" pos="0 -0.0315 0">
+                                                <geom name="Cright_coupler_mesh" type="mesh" mesh="robotiq_85_finger_link" material="GriMat" contype="0" conaffinity="0" />
+                                                <joint name="Cjoint8_1" axis="0 0 1" type="hinge" limited="true" range="0 2.967059728" />
+
+                                                <body name="Cright_follower_link" pos="0.0475 -0.006 0">
+                                                    <geom name="Cright_follower_mesh" pos="0.0025 0.021 0" type="mesh" mesh="robotiq_85_finger_tip_link" material="GriMat" />
+                                                    <joint name="Cjoint9_1" axis="0 0 1" type="hinge" limited="true" range="0 2.967059728" />
+                                                </body>
+
+                                            </body>
+
+                                        </body>
+
+                                        <body name="Cright_spring_link" pos="0.0016 -0.012 0.0614" quat="0.707107 0 -0.707107 0">
+                                            <geom name="Cright_spring_mesh" type="mesh" pos="0 -0.0005 0.0016" mesh="robotiq_85_inner_knuckle_link" material="GriMat" contype="0" conaffinity="0" />
+                                            <joint name="Cjoint10_1" axis="0 0 1" type="hinge" limited="true" range="0 1" />
+                                        </body>
+
+
+                                        <body name="Cleft_driver" pos="0 0.0306011 0.054904" quat="0 0.707107 0 0.707107">
+                                            <geom name="Cleft_driver_mesh" type="mesh" mesh="robotiq_85_knuckle_link" material="GriMat" contype="0" conaffinity="0" />
+                                            <joint name="Cjoint7_2" axis="0 0 1" type="hinge" limited="true" range="0 0.872664626" />
+
+                                        
+                                            <body name="Cleft_coupler" pos="0 -0.0315 0">
+                                                <geom name="Cleft_coupler_mesh" type="mesh" mesh="robotiq_85_finger_link" material="GriMat" contype="0" conaffinity="0" />
+                                                <joint name="Cjoint8_2" axis="0 0 1" type="hinge" limited="true" range="0 2.967059728" />
+
+                                                <body name="Cleft_follower_link" pos="0.0475 -0.006 0">
+                                                    <geom name="Cleft_follower_mesh" pos="0.0025 0.021 0" type="mesh" mesh="robotiq_85_finger_tip_link" material="GriMat" />
+                                                    <joint name="Cjoint9_2" axis="0 0 1" type="hinge" limited="true" range="0 2.967059728" />
+                                                </body>
+
+                                            </body>
+
+                                        </body>
+
+                                        <body name="Cleft_spring_link" pos="0.0016 0.012 0.0614" quat="0 0.707107 0 0.707107">
+                                            <geom name="Cleft_spring_mesh" type="mesh" pos="0 0.0005 0.0016" mesh="robotiq_85_inner_knuckle_link" material="GriMat" contype="0" conaffinity="0" />
+                                            <joint name="Cjoint10_2" axis="0 0 1" type="hinge" limited="true" range="0 1" />
+                                        </body>
+
+                                    </body>
+                                </body>
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+        </body>
+
+</mujoco>
