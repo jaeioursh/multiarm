@@ -1,30 +1,13 @@
-import time
 
-import mujoco
-import mujoco.viewer
+from ray.rllib.env.wrappers.pettingzoo_env import ParallelPettingZooEnv,PettingZooEnv
+
+from pettingzoo.sisl import waterworld_v4
+
+from rlwrapper import multiarm as sim
 import numpy as np
-m = mujoco.MjModel.from_xml_path('ur5e/multiscene.xml')
-d = mujoco.MjData(m)
 
-n_joints=m.nu
-d.qpos=np.array([-1.5708, -1.5708, 1.5708, -1.5708, -1.5708, 0]*3)
-with mujoco.viewer.launch_passive(m, d) as viewer:
-	# Close the viewer automatically after 30 wall-seconds.
-	start = time.time()
-	viewer.cam.distance = m.stat.extent * 7.0
-	while viewer.is_running() and time.time() - start < 30:
-		step_start = time.time()
-		state=d.qpos
-		print(state)
-		d.ctrl=np.zeros(n_joints)+1.0
-		# mj_step can be replaced with code that also evaluates
-		# a policy and applies a control signal before stepping the physics.
-		mujoco.mj_step(m, d)
-
-		# Pick up changes to the physics state, apply perturbations, update options from GUI.
-		viewer.sync()
-
-		# Rudimentary time keeping, will drift relative to wall clock.
-		time_until_next_step = m.opt.timestep - (time.time() - step_start)
-		if time_until_next_step > 0:
-			time.sleep(time_until_next_step)
+env1=PettingZooEnv(waterworld_v4.env())
+env2=sim()
+print(env1.reset())
+print(env1.step({"pursuer_"+str(i):np.array([1]*2) for i in range(3)}))
+print(env2.step({"arm_"+str(i):[1]*10 for i in range(3)}) ) 

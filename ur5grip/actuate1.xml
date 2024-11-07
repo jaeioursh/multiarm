@@ -5,4 +5,12 @@
         <motor name="Ajoint4_motor" joint="Ajoint4"/>
         <motor name="Ajoint5_motor" joint="Ajoint5"/>
         <motor name="Ajoint6_motor" joint="Ajoint6"/>
+        <motor name="Ajoint7_1_motor" joint="Ajoint7_1"/>
+        <motor name="Ajoint8_1_motor" joint="Ajoint8_1"/>
+        <motor name="Ajoint9_1_motor" joint="Ajoint9_1"/>
+        <motor name="Ajoint10_1_motor" joint="Ajoint10_1"/>
+        <motor name="Ajoint7_2_motor" joint="Ajoint7_2"/>
+        <motor name="Ajoint8_2_motor" joint="Ajoint8_2"/>
+        <motor name="Ajoint9_2_motor" joint="Ajoint9_2"/>
+        <motor name="Ajoint10_2_motor" joint="Ajoint10_2"/>
 </mujoco>

@@ -1,8 +1,16 @@
-<mujoco model="actuator1">
+<mujoco model="Bctuator1">
         <motor name="Bjoint1_motor" joint="Bjoint1" gear="1.2"/>
         <motor name="Bjoint2_motor" joint="Bjoint2"/>
         <motor name="Bjoint3_motor" joint="Bjoint3"/>
         <motor name="Bjoint4_motor" joint="Bjoint4"/>
         <motor name="Bjoint5_motor" joint="Bjoint5"/>
         <motor name="Bjoint6_motor" joint="Bjoint6"/>
+        <motor name="Bjoint7_1_motor" joint="Bjoint7_1"/>
+        <motor name="Bjoint8_1_motor" joint="Bjoint8_1"/>
+        <motor name="Bjoint9_1_motor" joint="Bjoint9_1"/>
+        <motor name="Bjoint10_1_motor" joint="Bjoint10_1"/>
+        <motor name="Bjoint7_2_motor" joint="Bjoint7_2"/>
+        <motor name="Bjoint8_2_motor" joint="Bjoint8_2"/>
+        <motor name="Bjoint9_2_motor" joint="Bjoint9_2"/>
+        <motor name="Bjoint10_2_motor" joint="Bjoint10_2"/>
 </mujoco>

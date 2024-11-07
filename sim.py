@@ -7,7 +7,7 @@ import numpy as np
 class armsim:
 	def __init__(self,view=False):
 		
-		self.m = mujoco.MjModel.from_xml_path('ur5e/multiscene.xml')
+		#self.m = mujoco.MjModel.from_xml_path('ur5e/multiscene.xml')
 		self.m = mujoco.MjModel.from_xml_path('ur5grip/scene.xml')
 		self.d = mujoco.MjData(self.m)
 		self.n_joints=self.m.nu
@@ -20,7 +20,8 @@ class armsim:
 		
 	def reset(self):
 				#pos     quaternion
-		box_pos=[0,1,0]+[0,0,0,1]
+		self.time=0
+		box_pos=[-1,1,0.2]+[0,0,0,1]
 		box_vel=[0]*6
 		armpos=[-1.5708, -1.5708, 1.5708, -1.5708, -1.5708, 0] #for ar m with no gripper
 		armpos+=[0]*8 #gripper pos
@@ -28,8 +29,16 @@ class armsim:
 		self.d.qvel=np.array(box_vel+[0]*3*len(armpos))
 		self.step_start=time.time()
 		return self.state()
+	
+	def done(self):
+		return self.time>1000
 
 	def reward(self):
+		box_pos=self.d.qpos[:3]
+		x,y,z=box_pos
+		if z<0.1:
+			return -100
+		return x
 		return 0.0
 	
 	def state(self):
@@ -41,11 +50,16 @@ class armsim:
 		box_vel=np.tile(box_vel, (3,1))
 		pos=np.array(pos).reshape((3,6+8))
 		vel=np.array(vel).reshape((3,6+8))
-
-		return  np.concatenate([pos,vel,box_pos,box_vel],axis=1)
+		state=np.concatenate([pos,vel,box_pos,box_vel],axis=1,dtype=np.float32)
+		return  state
 
 	def step(self,action):
-		self.d.ctrl=np.array(action).flatten()
+		self.time+=1
+		#print(self.d.ctrl.shape)
+		act=[]
+		for a in action:
+			act.append(np.concatenate((a,a[-4:])))
+		self.d.ctrl=np.array(act).flatten()
 		mujoco.mj_step(self.m, self.d)
 		if self.viewer is not None and self.viewer.is_running():
 			self.viewer.sync()
@@ -53,7 +67,7 @@ class armsim:
 			if time_until_next_step > 0:
 				time.sleep(time_until_next_step)
 			self.step_start=time.time()
-		return self.state(),self.reward()
+		return self.state(),self.reward(),self.done()
 
 
 if __name__ =="__main__":
@@ -61,9 +75,10 @@ if __name__ =="__main__":
 
 	for i in range(30):
 		state=sim.reset()
-		for i in range(1000):
-			action=[1]*18
-			state,reward=sim.step(action)
+		done=False
+		while not done:
+			action=[[1]*10]*3
+			state,reward,done=sim.step(action)
 			print(state)
 
 	
