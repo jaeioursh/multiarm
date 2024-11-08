@@ -6,8 +6,13 @@ from pettingzoo.sisl import waterworld_v4
 from rlwrapper import multiarm as sim
 import numpy as np
 
-env1=PettingZooEnv(waterworld_v4.env())
+env1=ParallelPettingZooEnv(waterworld_v4.parallel_env())
 env2=sim()
-print(env1.reset())
-print(env1.step({"pursuer_"+str(i):np.array([1]*2) for i in range(3)}))
-print(env2.step({"arm_"+str(i):[1]*10 for i in range(3)}) ) 
+for env in [env1,env2]:
+	print(env.reset())
+	print(env.agents)
+	#print(env.observation_spaces)
+	print(env.observation_space)
+	print(type(env.observation_space))
+	#print(env.action_spaces)
+	print(env.action_space)

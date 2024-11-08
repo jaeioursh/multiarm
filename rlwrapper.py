@@ -1,6 +1,7 @@
 from sim import armsim as sim
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 import gymnasium as gym
+from gymnasium.spaces import Dict
 
 class multiarm(MultiAgentEnv):
 	def __init__(self):
@@ -8,14 +9,17 @@ class multiarm(MultiAgentEnv):
 		self.env=sim()
 		self.names=["arm_"+str(i) for i in range(3)]
 		self.agents=self.names
-		self.observation_spaces = {
+		
+		self.observation_spaces = gym.spaces.Dict({
 			name: gym.spaces.Box(low=-20.0, high=20.0, shape=(41,))
 			for name in self.names
-		}
-		self.action_spaces = {
+		})
+		self.action_spaces = gym.spaces.Dict({
 			name: gym.spaces.Box(low=-2.0, high=2.0, shape=(10,))
 			for name in self.names
-		}
+		})
+		self.observation_space=self.observation_spaces
+		self.action_space=self.action_spaces
 	def reset(self,seed=None, options=None):
 		self.env.reset()
 		return self.state(),self.info()
@@ -45,3 +49,11 @@ class multiarm(MultiAgentEnv):
 		return self.state(),self.reward(),self.done(),self.done(),self.info()
 		
 
+if __name__=="__main__":
+	env=multiarm()
+	print(env.state())
+	print(env.reset())
+	print(env.agents)
+	print(env.observation_spaces)
+	print(env.action_spaces)
+	print(env.action_space)

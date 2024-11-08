@@ -19,7 +19,7 @@ from ray.rllib.utils.test_utils import (
 	run_rllib_example_script_experiment,
 )
 from ray.tune.registry import get_trainable_cls, register_env
-from ray.rllib.env.wrappers.pettingzoo_env import PettingZooEnv
+from ray.rllib.env.wrappers.pettingzoo_env import ParallelPettingZooEnv
 
 from pettingzoo.sisl import waterworld_v4
 
@@ -45,7 +45,7 @@ def trial1():
 	# For a "Parallel" environment example, see the rock paper scissors examples
 	# in this same repository folder.
 	if 0:
-		register_env("env", lambda _: PettingZooEnv(waterworld_v4.env()))
+		register_env("env", lambda _: ParallelPettingZooEnv(waterworld_v4.parallel_env()))
 
 		# Policies are called just like the agents (exact 1:1 mapping).
 		policies = {f"pursuer_{i}" for i in range(args.num_agents)}
@@ -82,13 +82,20 @@ def trial1():
 	run_rllib_example_script_experiment(base_config, args)
 
 def trial2():
-	register_env("env", lambda _: sim())
+
+	if 0:
+		register_env("env", lambda _: ParallelPettingZooEnv(waterworld_v4.parallel_env()))
 
 		# Policies are called just like the agents (exact 1:1 mapping).
-	obs_space = gym.spaces.Box(low=-20.0, high=20.0, shape=(41,))
-	act_space = gym.spaces.Box(low=-2.0, high=2.0, shape=(10,))
-	policies = {f"arm_{i}":(None, obs_space, act_space, {}) for i in range(3)}
-	new_version=False
+		policies = {f"pursuer_{i}" for i in range(2)}
+	else:
+		register_env("env", lambda _: sim())
+
+			# Policies are called just like the agents (exact 1:1 mapping).
+		obs_space = gym.spaces.Box(low=-20.0, high=20.0, shape=(41,))
+		act_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(10,))
+		policies = {f"arm_{i}" for i in range(3)}
+	new_version=True
 	config = (
 		PPOConfig()
         .api_stack(
@@ -118,8 +125,16 @@ def trial2():
 		.training(
 			vf_loss_coeff=0.005,
 		)
+		.rl_module(
+			rl_module_spec=MultiRLModuleSpec(
+				rl_module_specs={p: RLModuleSpec() for p in policies},
+				#rl_module_specs={p: RLModuleSpec(action_space=act_space,observation_space=obs_space) for p in policies},
+			),
+			model_config=DefaultModelConfig(vf_share_layers=False),
+		)
 	)
 	algorithm = config.build()
+	print(sim().state,sim().agents)
 	for i in range(100):
 		result = algorithm.train()
 		print(i)

@@ -51,6 +51,7 @@ class armsim:
 		pos=np.array(pos).reshape((3,6+8))
 		vel=np.array(vel).reshape((3,6+8))
 		state=np.concatenate([pos,vel,box_pos,box_vel],axis=1,dtype=np.float32)
+		state=np.clip(state,-20,20)
 		return  state
 
 	def step(self,action):
