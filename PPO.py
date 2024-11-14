@@ -99,9 +99,9 @@ class ActorCritic(nn.Module):
 
 
 class PPO:
-	def __init__(self, state_dim, action_dim, lr_actor, lr_critic, gamma, K_epochs, eps_clip, action_std_init=0.6):
+	def __init__(self, params,state_dim, action_dim, lr_actor, lr_critic, gamma, K_epochs, eps_clip, action_std_init=0.6):
 
-
+		self.params=params
 		
 		self.action_std = action_std_init
 
@@ -143,6 +143,17 @@ class PPO:
 		self.buffer.state_values.append(state_val)
 
 		return action.detach().cpu().numpy().flatten()
+
+	def deterministic_action(self, state):
+		with torch.no_grad():
+			state = torch.FloatTensor(state).to(device)
+			action = self.policy_old.actor(state)
+
+		return action.detach().cpu().numpy().flatten()
+	
+	def add_reward_terminal(self,reward,done):
+		self.buffer.rewards.append(float(reward))
+		self.buffer.is_terminals.append(done)
 
 	def update(self):
 		# Monte Carlo estimate of returns
@@ -208,17 +219,17 @@ class PPO:
 if __name__ =="__main__":
 	import gymnasium as gym
 	import numpy as np
-
 	env = gym.make("BipedalWalker-v3")
+	env_view = gym.make("BipedalWalker-v3",render_mode="human")
 
-	K_epochs = 30			   # update policy for K epochs in one PPO update
+	K_epochs = 50			   # update policy for K epochs in one PPO update
 
 	eps_clip = 0.2		  # clip parameter for PPO
 	gamma = 0.99			# discount factor
 
-	lr_actor = 0.0003	   # learning rate for actor network
+	lr_actor = 0.0001	   # learning rate for actor network
 	lr_critic = 0.001	   # learning rate for critic network
-	action_std = 0.6	  
+	action_std = 0.7	  
 	random_seed = 0
 
 	action_dim = 4
@@ -228,22 +239,29 @@ if __name__ =="__main__":
 		for j in range(5):
 			state,info = env.reset()
 			done = False
-			cumulative=0.0
 			idx=0
 			while not done:
 				idx+=1
 				action = ppo_agent.select_action(state)
-				
 				state, reward, done, _,_ = env.step(action)
+				ppo_agent.add_reward_terminal(reward,done)
+				if idx==200:
+					done=True
+		if i%10==0:
+			state,info = env_view.reset()
+			done = False
+			idx=0
+			cumulative=0
+			while not done:
+				idx+=1
+				action = ppo_agent.deterministic_action(state)
+				state, reward, done, _,_ = env_view.step(action)
 				cumulative+=reward
 				if idx==200:
 					done=True
-
-				# saving reward and is_terminals
-				ppo_agent.buffer.rewards.append(float(reward))
-				ppo_agent.buffer.is_terminals.append(done)
 			print(cumulative)
 		print("train")
 		print(ppo_agent.action_std)
 		ppo_agent.update()
 		ppo_agent.decay_action_std()
+	
