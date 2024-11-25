@@ -44,7 +44,7 @@ def test1(fname):
 		#print("train")
 		#print(ppo_agent.action_std)
 		ppo_agent.update(total_steps)
-		ppo_agent.decay_action_std()
+		ppo_agent.decay_action_std(total_steps)
 	
 
 if __name__ == '__main__':

@@ -119,8 +119,9 @@ class PPO:
 	
 	
 
-	def decay_action_std(self):
-		self.set_action_std(max(self.action_std-self.params.decay_rate,0.1))
+	def decay_action_std(self,idx):
+		percent=float(idx)/1.0e5
+		self.set_action_std(max(self.params.action_std-(self.params.decay_rate*percent),0.1))
 		
 	def select_action(self, state):
 		with torch.no_grad():
@@ -223,7 +224,7 @@ class PPO:
 			self.opt_critic.step()
 		self.params.writer.add_scalar("Loss/actor", np.mean(Aloss),idx)
 		self.params.writer.add_scalar("Loss/critic", np.mean(Closs),idx)	
-		self.params.writer.add_scalar("Loss/acton_std", self.action_std,idx)	
+		self.params.writer.add_scalar("Acton_std", self.action_std,idx)	
 		# Copy new weights into old policy
 		self.policy_old.load_state_dict(self.policy.state_dict())
 
@@ -248,7 +249,7 @@ class Params:
 		self.lr_actor = 0.0003	   # learning rate for actor network
 		self.lr_critic = 0.001	   # learning rate for critic network
 		self.action_std = 0.6	  
-		self.decay_rate=0.001
+		self.decay_rate=0.05      #per 100k steps
 		self.random_seed = 0
 
 
