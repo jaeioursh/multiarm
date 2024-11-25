@@ -2,24 +2,8 @@ import torch
 import torch.nn as nn
 from torch.distributions import MultivariateNormal
 from torch.distributions.normal import Normal
+from torch.utils.tensorboard import SummaryWriter
 
-
-################################## set device ##################################
-print("============================================================================================")
-# set device to cpu or cuda
-
-device = torch.device('cpu')
-if 0:
-	if(torch.cuda.is_available()): 
-		device = torch.device('cuda:0') 
-		torch.cuda.empty_cache()
-		print("Device set to : " + str(torch.cuda.get_device_name(device)))
-	else:
-		print("Device set to : cpu")
-	print("============================================================================================")
-
-
-################################## PPO Policy ##################################
 class RolloutBuffer:
 	def __init__(self):
 		self.actions = []
@@ -48,10 +32,11 @@ class ActorCritic(nn.Module):
 		actor_hidden = params.actor_hidden
 		critic_hidden = params.critic_hidden
 		active_fn = params.active_fn
+		self.device=params.device
 		
 		
 		self.action_dim = action_dim
-		self.action_var = torch.full((action_dim,), action_std_init * action_std_init).to(device)
+		self.action_var = torch.full((action_dim,), action_std_init * action_std_init).to(self.device)
 		# actor
 		
 		self.actor = nn.Sequential(
@@ -73,7 +58,7 @@ class ActorCritic(nn.Module):
 					)
 		
 	def set_action_std(self, new_action_std):
-		self.action_var = torch.full((self.action_dim,), new_action_std * new_action_std).to(device)
+		self.action_var = torch.full((self.action_dim,), new_action_std * new_action_std).to(self.device)
 
 	def forward(self):
 		raise NotImplementedError
@@ -107,7 +92,7 @@ class PPO:
 	def __init__(self, params):
 
 		self.params=params
-		
+		self.device=params.device
 		self.action_std = params.action_std
 
 		self.gamma = params.gamma
@@ -116,14 +101,15 @@ class PPO:
 		
 		self.buffer = RolloutBuffer()
 
-		self.policy = ActorCritic(params).to(device)
+		self.policy = ActorCritic(params).to(self.device)
 		self.opt_actor = torch.optim.Adam(self.policy.actor.parameters(),lr=params.lr_actor)
 		self.opt_critic = torch.optim.Adam(self.policy.critic.parameters(),lr=params.lr_critic)
 
-		self.policy_old = ActorCritic(params).to(device)
+		self.policy_old = ActorCritic(params).to(self.device)
 		self.policy_old.load_state_dict(self.policy.state_dict())
 		
 		self.MseLoss = nn.MSELoss()
+
 
 	def set_action_std(self, new_action_std):
 		self.action_std = new_action_std
@@ -137,7 +123,7 @@ class PPO:
 		
 	def select_action(self, state):
 		with torch.no_grad():
-			state = torch.FloatTensor(state).to(device)
+			state = torch.FloatTensor(state).to(self.device)
 			action, action_logprob, state_val = self.policy_old.act(state)
 
 		self.buffer.states.append(state)
@@ -149,7 +135,7 @@ class PPO:
 
 	def deterministic_action(self, state):
 		with torch.no_grad():
-			state = torch.FloatTensor(state).to(device)
+			state = torch.FloatTensor(state).to(self.device)
 			action = self.policy_old.actor(state)
 
 		return action.detach().cpu().numpy().flatten()
@@ -158,7 +144,24 @@ class PPO:
 		self.buffer.rewards.append(float(reward))
 		self.buffer.is_terminals.append(done)
 
-	def update(self):
+ 
+	def gae(self,rewards,values, is_terminals ):
+		returns = []
+		gae = 0
+		for i in reversed(range(len(rewards))):
+			if is_terminals[i]:
+				delta = rewards[i]  - values[i]
+				gae = delta 
+			else:
+				delta = rewards[i] + self.params.gamma * values[i + 1]  - values[i]
+				gae = delta + self.params.gamma * self.params.lmbda * gae
+			returns.insert(0, [(gae).item()])
+
+		adv = np.array(returns)
+		adv=(adv - np.mean(adv)) / (np.std(adv) + 1e-10)
+		return torch.from_numpy(adv).to(self.device)
+
+	def update(self,idx):
 		# Monte Carlo estimate of returns
 		rewards = []
 		discounted_reward = 0
@@ -169,19 +172,24 @@ class PPO:
 			rewards.insert(0, discounted_reward)
 			
 		# Normalizing the rewards
-		rewards = torch.tensor(rewards, dtype=torch.float32).to(device)
-		rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-7)
+		rewards = torch.tensor(rewards, dtype=torch.float32).to(self.device)
+		#rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-7)
 
 		# convert list to tensor
-		old_states = torch.squeeze(torch.stack(self.buffer.states, dim=0)).detach().to(device)
-		old_actions = torch.squeeze(torch.stack(self.buffer.actions, dim=0)).detach().to(device)
-		old_logprobs = torch.squeeze(torch.stack(self.buffer.logprobs, dim=0)).detach().to(device)
-		old_state_values = torch.squeeze(torch.stack(self.buffer.state_values, dim=0)).detach().to(device)
+		old_states = torch.squeeze(torch.stack(self.buffer.states, dim=0)).detach().to(self.device)
+		old_actions = torch.squeeze(torch.stack(self.buffer.actions, dim=0)).detach().to(self.device)
+		old_logprobs = torch.squeeze(torch.stack(self.buffer.logprobs, dim=0)).detach().to(self.device)
+		old_state_values = torch.squeeze(torch.stack(self.buffer.state_values, dim=0)).detach().to(self.device)
 
 		# calculate advantages
-		advantages = rewards.detach() - old_state_values.detach()
-		advantages=advantages.reshape((-1,1))
+		advantages = (rewards.detach() - old_state_values.detach()).reshape((-1,1))
 		#advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-7)
+
+		advantages=self.gae(self.buffer.rewards,self.buffer.state_values,self.buffer.is_terminals)
+		self.params.writer.add_scalars("Loss/Advantage",{"min": min(advantages),
+														"max": max(advantages),
+														"mean":torch.mean(advantages)},idx)	
+		Aloss,Closs=[],[]
 		# Optimize policy for K epochs
 		for _ in range(self.K_epochs):
 
@@ -200,18 +208,21 @@ class PPO:
 
 			# final loss of clipped objective PPO
 			loss_actor = -torch.min(surr1, surr2)  - self.params.beta_ent * dist_entropy
-
-			loss_critic= 0.5 * self.MseLoss(state_values, rewards)
-			
+			loss_actor=loss_actor.mean()
+			loss_critic= self.MseLoss(state_values, rewards)
+			Aloss.append(loss_actor.item())
+			Closs.append(loss_critic.item())
 			# take gradient step
 			self.opt_actor.zero_grad()
-			loss_actor.mean().backward()
+			loss_actor.backward()
 			self.opt_actor.step()
 
 			self.opt_critic.zero_grad()
 			loss_critic.backward()
 			self.opt_critic.step()
-			
+		self.params.writer.add_scalar("Loss/actor", np.mean(Aloss),idx)
+		self.params.writer.add_scalar("Loss/critic", np.mean(Closs),idx)	
+		self.params.writer.add_scalar("Loss/acton_std", self.action_std,idx)	
 		# Copy new weights into old policy
 		self.policy_old.load_state_dict(self.policy.state_dict())
 
@@ -226,17 +237,17 @@ class PPO:
 		self.policy.load_state_dict(torch.load(checkpoint_path, map_location=lambda storage, loc: storage))
 
 class Params:
-	def __init__(self):	
-		self.K_epochs = 10			   # update policy for K epochs in one PPO update
+	def __init__(self,fname="save1"):	
+		self.K_epochs = 80			   # update policy for K epochs in one PPO update
 		self.N_batch=4
-		self.N_steps=1e6
+		self.N_steps=3e6
 		self.eps_clip = 0.2		  # clip parameter for PPO
 		self.gamma = 0.99			# discount factor
 
 		self.lr_actor = 0.0003	   # learning rate for actor network
 		self.lr_critic = 0.001	   # learning rate for critic network
 		self.action_std = 0.6	  
-		self.decay_rate=0.0005
+		self.decay_rate=0.001
 		self.random_seed = 0
 
 
@@ -248,7 +259,14 @@ class Params:
 		#self.active_fn = nn.LeakyReLU
 		self.active_fn = nn.Tanh
 		self.beta_ent=0.01
+		self.lmbda=0.95
 
+		self.max_steps=1000
+		self.device="cpu"
+		self.writer=SummaryWriter("./logs/"+fname)
+
+		for key,val in self.__dict__.items():
+			self.writer.add_text("Params/"+key, key+" : "+str(val))
 
 if __name__ =="__main__":
 	import gymnasium as gym
@@ -270,11 +288,12 @@ if __name__ =="__main__":
 				idx+=1
 				action = ppo_agent.select_action(state)
 				state, reward, done, _,_ = env.step(action)
-				ppo_agent.add_reward_terminal(reward,done)
-				if idx==600:
+				if idx==params.max_steps:
 					done=True
+				ppo_agent.add_reward_terminal(reward,done)
+
 			total_steps+=idx
-		if i%3==0:
+		if i%1==0:
 			state,info = env.reset()
 			done = False
 			idx=0
@@ -284,11 +303,12 @@ if __name__ =="__main__":
 				action = ppo_agent.deterministic_action(state)
 				state, reward, done, _,_ = env.step(action)
 				cumulative+=reward
-				if idx==600:
+				if idx==params.max_steps:
 					done=True
 			print(cumulative,total_steps,ppo_agent.action_std)
+			params.writer.add_scalar("reward", cumulative, total_steps)
 		#print("train")
 		#print(ppo_agent.action_std)
-		ppo_agent.update()
+		ppo_agent.update(total_steps)
 		ppo_agent.decay_action_std()
 	
