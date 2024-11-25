@@ -133,7 +133,7 @@ class PPO:
 	
 
 	def decay_action_std(self):
-		self.set_action_std(max(self.action_std*0.98,0.1))
+		self.set_action_std(max(self.action_std-self.params.decay_rate,0.1))
 		
 	def select_action(self, state):
 		with torch.no_grad():
@@ -170,7 +170,7 @@ class PPO:
 			
 		# Normalizing the rewards
 		rewards = torch.tensor(rewards, dtype=torch.float32).to(device)
-		#rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-7)
+		rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-7)
 
 		# convert list to tensor
 		old_states = torch.squeeze(torch.stack(self.buffer.states, dim=0)).detach().to(device)
@@ -181,7 +181,7 @@ class PPO:
 		# calculate advantages
 		advantages = rewards.detach() - old_state_values.detach()
 		advantages=advantages.reshape((-1,1))
-		advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-7)
+		#advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-7)
 		# Optimize policy for K epochs
 		for _ in range(self.K_epochs):
 
@@ -227,21 +227,24 @@ class PPO:
 
 class Params:
 	def __init__(self):	
-		self.K_epochs = 20			   # update policy for K epochs in one PPO update
-		self.N_runs=5
+		self.K_epochs = 10			   # update policy for K epochs in one PPO update
+		self.N_batch=4
+		self.N_steps=1e6
 		self.eps_clip = 0.2		  # clip parameter for PPO
 		self.gamma = 0.99			# discount factor
 
-		self.lr_actor = 0.0001	   # learning rate for actor network
+		self.lr_actor = 0.0003	   # learning rate for actor network
 		self.lr_critic = 0.001	   # learning rate for critic network
-		self.action_std = 0.7	  
+		self.action_std = 0.6	  
+		self.decay_rate=0.0005
 		self.random_seed = 0
+
 
 		self.action_dim = 4
 		self.state_dim = 24
 
-		self.actor_hidden = 128
-		self.critic_hidden = 128
+		self.actor_hidden = 64
+		self.critic_hidden = 64
 		#self.active_fn = nn.LeakyReLU
 		self.active_fn = nn.Tanh
 		self.beta_ent=0.01
@@ -256,8 +259,10 @@ if __name__ =="__main__":
 	params=Params()
 	ppo_agent = PPO(params)
 	total_steps=0
-	for i in range(10000):
-		for j in range(params.N_runs):
+	i=0
+	while total_steps<params.N_steps:
+		i+=1
+		for j in range(params.N_batch):
 			state,info = env.reset()
 			done = False
 			idx=0
@@ -281,7 +286,7 @@ if __name__ =="__main__":
 				cumulative+=reward
 				if idx==600:
 					done=True
-			print(cumulative,total_steps)
+			print(cumulative,total_steps,ppo_agent.action_std)
 		#print("train")
 		#print(ppo_agent.action_std)
 		ppo_agent.update()
