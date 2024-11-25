@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.distributions import MultivariateNormal
 from torch.distributions.normal import Normal
 from torch.utils.tensorboard import SummaryWriter
+import numpy as np
 
 class RolloutBuffer:
 	def __init__(self):
@@ -188,7 +189,7 @@ class PPO:
 		advantages=self.gae(self.buffer.rewards,self.buffer.state_values,self.buffer.is_terminals)
 		self.params.writer.add_scalars("Loss/Advantage",{"min": min(advantages),
 														"max": max(advantages),
-														"mean":torch.mean(advantages)},idx)	
+														"mean":torch.median(advantages)},idx)	
 		Aloss,Closs=[],[]
 		# Optimize policy for K epochs
 		for _ in range(self.K_epochs):
@@ -238,7 +239,7 @@ class PPO:
 
 class Params:
 	def __init__(self,fname="save1"):	
-		self.K_epochs = 80			   # update policy for K epochs in one PPO update
+		self.K_epochs = 20			   # update policy for K epochs in one PPO update
 		self.N_batch=4
 		self.N_steps=3e6
 		self.eps_clip = 0.2		  # clip parameter for PPO
@@ -269,46 +270,4 @@ class Params:
 			self.writer.add_text("Params/"+key, key+" : "+str(val))
 
 if __name__ =="__main__":
-	import gymnasium as gym
-	import numpy as np
-	env = gym.make("BipedalWalker-v3")
-	env_view = gym.make("BipedalWalker-v3",render_mode="human")
-
-	params=Params()
-	ppo_agent = PPO(params)
-	total_steps=0
-	i=0
-	while total_steps<params.N_steps:
-		i+=1
-		for j in range(params.N_batch):
-			state,info = env.reset()
-			done = False
-			idx=0
-			while not done:
-				idx+=1
-				action = ppo_agent.select_action(state)
-				state, reward, done, _,_ = env.step(action)
-				if idx==params.max_steps:
-					done=True
-				ppo_agent.add_reward_terminal(reward,done)
-
-			total_steps+=idx
-		if i%1==0:
-			state,info = env.reset()
-			done = False
-			idx=0
-			cumulative=0
-			while not done:
-				idx+=1
-				action = ppo_agent.deterministic_action(state)
-				state, reward, done, _,_ = env.step(action)
-				cumulative+=reward
-				if idx==params.max_steps:
-					done=True
-			print(cumulative,total_steps,ppo_agent.action_std)
-			params.writer.add_scalar("reward", cumulative, total_steps)
-		#print("train")
-		#print(ppo_agent.action_std)
-		ppo_agent.update(total_steps)
-		ppo_agent.decay_action_std()
-	
+	pass
