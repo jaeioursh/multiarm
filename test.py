@@ -24,7 +24,7 @@ def test1(fname):
 				state, reward, done, _,_ = env.step(action)
 				if idx==params.max_steps:
 					done=True
-				ppo_agent.add_reward_terminal(reward,done)
+				ppo_agent.add_reward_terminal(reward*0.1,done)
 
 			total_steps+=idx
 		if i%1==0:
@@ -44,7 +44,7 @@ def test1(fname):
 		#print("train")
 		#print(ppo_agent.action_std)
 		ppo_agent.update(total_steps)
-		ppo_agent.decay_action_std(total_steps)
+		
 	
 
 if __name__ == '__main__':

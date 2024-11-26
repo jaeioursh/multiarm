@@ -46,7 +46,7 @@ class ActorCritic(nn.Module):
 						nn.Linear(actor_hidden, actor_hidden),
 						active_fn(),
 						nn.Linear(actor_hidden, action_dim),
-						active_fn()
+						nn.Tanh()
 					)
 		
 		# critic
@@ -94,7 +94,7 @@ class PPO:
 
 		self.params=params
 		self.device=params.device
-		self.action_std = params.action_std
+		#self.action_std = params.action_std
 
 		self.gamma = params.gamma
 		self.eps_clip = params.eps_clip
@@ -110,6 +110,7 @@ class PPO:
 		self.policy_old.load_state_dict(self.policy.state_dict())
 		
 		self.MseLoss = nn.MSELoss()
+		self.decay_action_std(0)
 
 
 	def set_action_std(self, new_action_std):
@@ -121,7 +122,9 @@ class PPO:
 
 	def decay_action_std(self,idx):
 		percent=float(idx)/1.0e5
-		self.set_action_std(max(self.params.action_std-(self.params.decay_rate*percent),0.1))
+		#val=max(self.params.action_std-(self.params.decay_rate*percent),0.1)
+		val=np.exp(self.params.action_std-(self.params.decay_rate*percent))
+		self.set_action_std(val)
 		
 	def select_action(self, state):
 		with torch.no_grad():
@@ -160,11 +163,12 @@ class PPO:
 			returns.insert(0, [(gae).item()])
 
 		adv = np.array(returns)
-		adv=(adv - np.mean(adv)) / (np.std(adv) + 1e-10)
+		#adv=(adv - np.mean(adv)) / (np.std(adv) + 1e-10)
 		return torch.from_numpy(adv).to(self.device)
 
 	def update(self,idx):
 		# Monte Carlo estimate of returns
+		self.decay_action_std(idx)
 		rewards = []
 		discounted_reward = 0
 		for reward, is_terminal in zip(reversed(self.buffer.rewards), reversed(self.buffer.is_terminals)):
@@ -175,6 +179,7 @@ class PPO:
 			
 		# Normalizing the rewards
 		rewards = torch.tensor(rewards, dtype=torch.float32).to(self.device)
+		rewards= torch.clip(rewards,-1,1).detach()
 		#rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-7)
 
 		# convert list to tensor
@@ -184,14 +189,12 @@ class PPO:
 		old_state_values = torch.squeeze(torch.stack(self.buffer.state_values, dim=0)).detach().to(self.device)
 
 		# calculate advantages
-		advantages = (rewards.detach() - old_state_values.detach()).reshape((-1,1))
+		#advantages = (rewards.detach() - old_state_values.detach()).reshape((-1,1))
 		#advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-7)
 
 		advantages=self.gae(self.buffer.rewards,self.buffer.state_values,self.buffer.is_terminals)
-		self.params.writer.add_scalars("Loss/Advantage",{"min": min(advantages),
-														"max": max(advantages),
-														"mean":torch.median(advantages)},idx)	
-		Aloss,Closs=[],[]
+		
+		Aloss,Closs,Entropy=[],[],[]
 		# Optimize policy for K epochs
 		for _ in range(self.K_epochs):
 
@@ -209,22 +212,30 @@ class PPO:
 			surr2 = torch.clamp(ratios, 1-self.eps_clip, 1+self.eps_clip) * advantages
 
 			# final loss of clipped objective PPO
-			loss_actor = -torch.min(surr1, surr2)  - self.params.beta_ent * dist_entropy
+			loss_actor = -torch.min(surr1, surr2)  #- self.params.beta_ent * dist_entropy
 			loss_actor=loss_actor.mean()
 			loss_critic= self.MseLoss(state_values, rewards)
+			Entropy.append(dist_entropy.mean().item())
 			Aloss.append(loss_actor.item())
 			Closs.append(loss_critic.item())
 			# take gradient step
 			self.opt_actor.zero_grad()
 			loss_actor.backward()
+			torch.nn.utils.clip_grad_norm_(self.policy.actor.parameters(), self.params.grad_clip)
 			self.opt_actor.step()
 
 			self.opt_critic.zero_grad()
 			loss_critic.backward()
+			torch.nn.utils.clip_grad_norm_(self.policy.critic.parameters(), self.params.grad_clip)
 			self.opt_critic.step()
-		self.params.writer.add_scalar("Loss/actor", np.mean(Aloss),idx)
-		self.params.writer.add_scalar("Loss/critic", np.mean(Closs),idx)	
-		self.params.writer.add_scalar("Acton_std", self.action_std,idx)	
+		if self.params.log_indiv:
+			self.params.writer.add_scalar("Loss/entropy", np.mean(Entropy),idx)
+			self.params.writer.add_scalar("Loss/actor", np.mean(Aloss),idx)
+			self.params.writer.add_scalar("Loss/critic", np.mean(Closs),idx)	
+			self.params.writer.add_scalar("Acton_std", self.action_std,idx)	
+			self.params.writer.add_scalars("Loss/Advantage",{"min": min(advantages),
+															"max": max(advantages),
+															"mean":torch.median(advantages)},idx)	
 		# Copy new weights into old policy
 		self.policy_old.load_state_dict(self.policy.state_dict())
 
@@ -241,30 +252,31 @@ class PPO:
 class Params:
 	def __init__(self,fname="save1"):	
 		self.K_epochs = 20			   # update policy for K epochs in one PPO update
-		self.N_batch=4
+		self.N_batch=8
 		self.N_steps=3e6
 		self.eps_clip = 0.2		  # clip parameter for PPO
 		self.gamma = 0.99			# discount factor
 
 		self.lr_actor = 0.0003	   # learning rate for actor network
 		self.lr_critic = 0.001	   # learning rate for critic network
-		self.action_std = 0.6	  
-		self.decay_rate=0.05      #per 100k steps
+		self.action_std = -0.8	  
+		self.decay_rate=0.07      #per 100k steps
 		self.random_seed = 0
-
+		self.grad_clip=0.5
 
 		self.action_dim = 4
 		self.state_dim = 24
 
 		self.actor_hidden = 64
 		self.critic_hidden = 64
-		#self.active_fn = nn.LeakyReLU
-		self.active_fn = nn.Tanh
-		self.beta_ent=0.01
+		self.active_fn = nn.LeakyReLU
+		#self.active_fn = nn.Tanh
+		self.beta_ent=0.000
 		self.lmbda=0.95
 
 		self.max_steps=1000
 		self.device="cpu"
+		self.log_indiv=True
 		self.writer=SummaryWriter("./logs/"+fname)
 
 		for key,val in self.__dict__.items():
