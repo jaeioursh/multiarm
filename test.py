@@ -43,7 +43,10 @@ def test1(fname):
 			params.writer.add_scalar("reward", cumulative, total_steps)
 		#print("train")
 		#print(ppo_agent.action_std)
+		if i%10==0:
+			ppo_agent.save("./logs/"+fname+".ck")
 		ppo_agent.update(total_steps)
+
 		
 	
 
