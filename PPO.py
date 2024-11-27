@@ -291,7 +291,7 @@ class Params:
 		self.log_indiv=True
 		self.writer=SummaryWriter("./logs/"+fname)
 		self.var_learned=True
-		self.beta_ent=0.01
+		self.beta_ent=0.001
 
 		for key,val in self.__dict__.items():
 			self.writer.add_text("Params/"+key, key+" : "+str(val))
