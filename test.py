@@ -8,7 +8,7 @@ def test1(fname):
 	env = gym.make("BipedalWalker-v3")
 	env_view = gym.make("BipedalWalker-v3",render_mode="human")
 
-	params=Params(fname)
+	params = Params(fname)
 	ppo_agent = PPO(params)
 	total_steps=0
 	i=0
@@ -51,5 +51,8 @@ def test1(fname):
 	
 
 if __name__ == '__main__':
-    with Pool(5) as p:
-        print(p.map(test1, ["save"+str(i) for i in range(4)]))
+	if 0:
+		test1("save0")
+	else:
+		with Pool(5) as p:
+			print(p.map(test1, ["save"+str(i) for i in range(4)]))

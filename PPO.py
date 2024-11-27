@@ -35,11 +35,11 @@ class ActorCritic(nn.Module):
 		active_fn = params.active_fn
 		self.device=params.device
 		
-		
+		self.var_learned=params.var_learned
 		self.action_dim = action_dim
 		self.action_var = torch.full((action_dim,), action_std_init * action_std_init).to(self.device)
+		self.log_action_var =nn.Parameter(torch.rand(action_dim)/100+params.action_std).to(self.device)
 		# actor
-		
 		self.actor = nn.Sequential(
 						nn.Linear(state_dim, actor_hidden),
 						active_fn(),
@@ -64,24 +64,32 @@ class ActorCritic(nn.Module):
 	def forward(self):
 		raise NotImplementedError
 	
-	def act(self, state):
+	def act(self, state,deterministic=False):
 
 
 		action_mean = self.actor(state)
-		dist = Normal(action_mean, self.action_var)
+		if self.var_learned:
+			action_var=torch.exp(self.log_action_var)
+		else:
+			action_var=self.action_var
+		dist = Normal(action_mean,action_var)
 		action = dist.sample()
 		action_logprob = dist.log_prob(action)
 		state_val = self.critic(state)
 
-		return action.detach(), action_logprob.detach(), state_val.detach()
+		if deterministic:
+			return action_mean.detach()
+		else:
+			return action.detach(), action_logprob.detach(), state_val.detach()
 	
 	def evaluate(self, state, action):
 
-		
 		action_mean = self.actor(state)
-		
-		dist = Normal(action_mean, self.action_var)
-			
+		if self.var_learned:
+			action_var=torch.exp(self.log_action_var)
+		else:
+			action_var=self.action_var
+		dist = Normal(action_mean,action_var)
 		action_logprobs = dist.log_prob(action)
 		dist_entropy = dist.entropy()
 		state_values = self.critic(state)
@@ -103,7 +111,7 @@ class PPO:
 		self.buffer = RolloutBuffer()
 
 		self.policy = ActorCritic(params).to(self.device)
-		self.opt_actor = torch.optim.Adam(self.policy.actor.parameters(),lr=params.lr_actor)
+		self.opt_actor = torch.optim.Adam([p for p in self.policy.actor.parameters()]+[self.policy.log_action_var],lr=params.lr_actor)
 		self.opt_critic = torch.optim.Adam(self.policy.critic.parameters(),lr=params.lr_critic)
 
 		self.policy_old = ActorCritic(params).to(self.device)
@@ -141,7 +149,7 @@ class PPO:
 	def deterministic_action(self, state):
 		with torch.no_grad():
 			state = torch.FloatTensor(state).to(self.device)
-			action = self.policy_old.actor(state)
+			action = self.policy_old.act(state,deterministic=True)
 
 		return action.detach().cpu().numpy().flatten()
 	
@@ -212,7 +220,9 @@ class PPO:
 			surr2 = torch.clamp(ratios, 1-self.eps_clip, 1+self.eps_clip) * advantages
 
 			# final loss of clipped objective PPO
-			loss_actor = -torch.min(surr1, surr2)  #- self.params.beta_ent * dist_entropy
+			loss_actor = -torch.min(surr1, surr2)
+			if self.params.var_learned:
+				loss_actor=loss_actor - self.params.beta_ent * dist_entropy
 			loss_actor=loss_actor.mean()
 			loss_critic= self.MseLoss(state_values, rewards)
 			Entropy.append(dist_entropy.mean().item())
@@ -221,7 +231,7 @@ class PPO:
 			# take gradient step
 			self.opt_actor.zero_grad()
 			loss_actor.backward()
-			torch.nn.utils.clip_grad_norm_(self.policy.actor.parameters(), self.params.grad_clip)
+			#torch.nn.utils.clip_grad_norm_(self.policy.actor.parameters(), self.params.grad_clip)
 			self.opt_actor.step()
 
 			self.opt_critic.zero_grad()
@@ -233,6 +243,8 @@ class PPO:
 			self.params.writer.add_scalar("Loss/actor", np.mean(Aloss),idx)
 			self.params.writer.add_scalar("Loss/critic", np.mean(Closs),idx)	
 			self.params.writer.add_scalar("Acton_std", self.action_std,idx)	
+			self.params.writer.add_scalar("Action/STD_Mean",torch.mean(self.policy.log_action_var),idx)	
+			self.params.writer.add_scalars("Action/STD_Vals",{str(i):self.policy.log_action_var[i] for i in range(self.params.action_dim)},idx)	
 			self.params.writer.add_scalars("Loss/Advantage",{"min": min(advantages),
 															"max": max(advantages),
 															"mean":torch.median(advantages)},idx)	
@@ -271,13 +283,15 @@ class Params:
 		self.critic_hidden = 64
 		self.active_fn = nn.LeakyReLU
 		#self.active_fn = nn.Tanh
-		self.beta_ent=0.000
+		
 		self.lmbda=0.95
 
 		self.max_steps=1000
 		self.device="cpu"
 		self.log_indiv=True
 		self.writer=SummaryWriter("./logs/"+fname)
+		self.var_learned=True
+		self.beta_ent=0.01
 
 		for key,val in self.__dict__.items():
 			self.writer.add_text("Params/"+key, key+" : "+str(val))
