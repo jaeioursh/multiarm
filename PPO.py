@@ -98,7 +98,7 @@ class ActorCritic(nn.Module):
 
 
 class PPO:
-	def __init__(self, params):
+	def __init__(self, params,idx=0):
 
 		self.params=params
 		self.device=params.device
@@ -119,6 +119,7 @@ class PPO:
 		
 		self.MseLoss = nn.MSELoss()
 		self.decay_action_std(0)
+		self.idx=idx
 
 
 	def set_action_std(self, new_action_std):
@@ -239,15 +240,16 @@ class PPO:
 			torch.nn.utils.clip_grad_norm_(self.policy.critic.parameters(), self.params.grad_clip)
 			self.opt_critic.step()
 		if self.params.log_indiv:
-			self.params.writer.add_scalar("Loss/entropy", np.mean(Entropy),idx)
-			self.params.writer.add_scalar("Loss/actor", np.mean(Aloss),idx)
-			self.params.writer.add_scalar("Loss/critic", np.mean(Closs),idx)	
-			self.params.writer.add_scalar("Acton_std", self.action_std,idx)	
-			self.params.writer.add_scalar("Action/STD_Mean",torch.mean(self.policy.log_action_var),idx)	
-			self.params.writer.add_scalars("Action/STD_Vals",{str(i):self.policy.log_action_var[i] for i in range(self.params.action_dim)},idx)	
-			self.params.writer.add_scalars("Loss/Advantage",{"min": min(advantages),
-															"max": max(advantages),
-															"mean":torch.median(advantages)},idx)	
+			prefix="Agent"+str(self.idx)+"/"
+			self.params.writer.add_scalar(prefix+"Loss/entropy", np.mean(Entropy),idx)
+			self.params.writer.add_scalar(prefix+"Loss/actor", np.mean(Aloss),idx)
+			self.params.writer.add_scalar(prefix+"Loss/critic", np.mean(Closs),idx)	
+			self.params.writer.add_scalar(prefix+"Acton_std", self.action_std,idx)	
+			self.params.writer.add_scalar(prefix+"Action/STD_Mean",torch.mean(self.policy.log_action_var),idx)	
+			#elf.params.writer.add_scalars(prefix+"Action/STD_Vals",{str(i):self.policy.log_action_var[i] for i in range(self.params.action_dim)},idx)	
+			self.params.writer.add_scalar(prefix+"Loss/Advantage_min", min(advantages),idx)
+			self.params.writer.add_scalar(prefix+"Loss/Advantage_max", max(advantages),idx)
+
 		# Copy new weights into old policy
 		self.policy_old.load_state_dict(self.policy.state_dict())
 
@@ -262,7 +264,7 @@ class PPO:
 		self.policy.load_state_dict(torch.load(checkpoint_path, map_location=lambda storage, loc: storage))
 
 class Params:
-	def __init__(self,fname="save1"):	
+	def __init__(self,fname=None,n_agents=0):	
 		self.K_epochs = 20			   # update policy for K epochs in one PPO update
 		self.N_batch=8
 		self.N_steps=3e6
@@ -289,10 +291,15 @@ class Params:
 		self.max_steps=1000
 		self.device="cpu"
 		self.log_indiv=True
-		self.writer=SummaryWriter("./logs/"+fname)
+		if fname is not None:
+			self.writer=SummaryWriter("./logs/"+fname)
+		else:
+			self.log_indiv=False
 		self.var_learned=True
 		self.beta_ent=0.001
+		self.n_agents=n_agents
 
+	def write(self):
 		for key,val in self.__dict__.items():
 			self.writer.add_text("Params/"+key, key+" : "+str(val))
 

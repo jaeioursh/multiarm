@@ -37,7 +37,7 @@ class armsim:
 		box_pos=self.d.qpos[:3]
 		x,y,z=box_pos
 		if z<0.1:
-			return -100
+			return -10
 		return x
 		return 0.0
 	

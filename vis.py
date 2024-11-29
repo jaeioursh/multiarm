@@ -9,7 +9,7 @@ env = gym.make("BipedalWalker-v3",render_mode="human")
 
 params=Params("test")
 ppo_agent = PPO(params)
-fname="save1"
+fname="save0"
 ppo_agent.load("./logs/"+fname+".ck")
 total_steps=0
 i=0
