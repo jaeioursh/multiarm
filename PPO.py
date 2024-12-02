@@ -5,6 +5,11 @@ from torch.distributions.normal import Normal
 from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 
+torch.autograd.set_detect_anomaly(False)
+torch.autograd.profiler.profile(False)
+torch.autograd.profiler.emit_nvtx(False)
+
+
 class RolloutBuffer:
 	def __init__(self):
 		self.actions = []
@@ -48,6 +53,7 @@ class ActorCritic(nn.Module):
 						nn.Linear(actor_hidden, action_dim),
 						nn.Tanh()
 					)
+		
 		
 		# critic
 		self.critic = nn.Sequential(

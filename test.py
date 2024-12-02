@@ -3,7 +3,9 @@ import gymnasium as gym
 import numpy as np
 from PPO import PPO, Params
 from multiprocessing import Pool
-
+import mujoco
+import mujoco.viewer
+from time import sleep
 def test1(fname):
 	env = gym.make("BipedalWalker-v3")
 	env_view = gym.make("BipedalWalker-v3",render_mode="human")
@@ -47,12 +49,39 @@ def test1(fname):
 			ppo_agent.save("./logs/"+fname+".ck")
 		ppo_agent.update(total_steps)
 
-		
-	
-
-if __name__ == '__main__':
+def run_test1():		
 	if 0:
 		test1("save0")
 	else:
 		with Pool(5) as p:
 			print(p.map(test1, ["save"+str(i) for i in range(4)]))
+
+def test_mujoco():
+	view=1
+	m = mujoco.MjModel.from_xml_path('xarm7/scene.xml')
+	d = mujoco.MjData(m)
+
+	n_joints=m.nu
+	if view:
+		viewer = mujoco.viewer.launch_passive(m, d)
+		viewer.cam.distance = m.stat.extent * 2.0
+	else:
+		viewer = None
+
+	pos=np.array(d.qpos)
+	vel=np.array(d.qvel)
+	print(n_joints)
+	for i in range(1000):
+		d.qpos=pos
+		d.qvel=vel 
+		for j in range(200):
+			act=[1]*8+[2]*8+[5]*8
+			d.ctrl=act
+			mujoco.mj_step(m, d)
+			viewer.sync()
+			sleep(1.0/30.0)
+
+
+
+if __name__ == '__main__':
+	test_mujoco()

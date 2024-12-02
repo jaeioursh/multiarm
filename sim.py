@@ -78,7 +78,7 @@ if __name__ =="__main__":
 		state=sim.reset()
 		done=False
 		while not done:
-			action=[[1]*10]*3
+			action=[[0]*10]*3
 			state,reward,done=sim.step(action)
 			print(state)
 
