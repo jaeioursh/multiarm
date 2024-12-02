@@ -8,19 +8,21 @@ params=Params(n_agents=3)
 params.action_dim=10
 params.state_dim=41
 learner=IPPO(params)
+params.N_steps=3e4
 
-
-for i in range(int(params.N_steps)):
-    state=env.reset()
-    done=False
-    step=0
+step=0
+while step<params.N_steps:
     for j in range(params.N_batch):
+        done=False
+        state=env.reset()
         while not done:
+            
             step+=1
             action=learner.act(state)
             state,reward,done=env.step(action)
             learner.add_reward_terminal([reward]*3,done)
-    learner.train(i*4000)
+        print(step)
+    learner.train(step*4000)
     
 
 

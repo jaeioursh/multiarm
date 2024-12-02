@@ -3,6 +3,7 @@ from IPPO import IPPO
 from sim import armsim
 import optuna
 from collections import deque
+
 import multiprocessing
 PRUNE=0
 def objective(trial):
@@ -21,10 +22,12 @@ def objective(trial):
     step=0
     r_hist=deque(maxlen=10)
     while step<params.N_steps:
-        state=env.reset()
-        done=False
+        
+        
         running_reward=0
         for j in range(params.N_batch):
+            state=env.reset()
+            done=False
             while not done:
                 step+=1
                 action=learner.act(state)
