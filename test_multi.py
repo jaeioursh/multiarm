@@ -5,8 +5,8 @@ from sim import armsim
 
 env=armsim(1)
 params=Params(n_agents=3)
-params.action_dim=10
-params.state_dim=41
+params.action_dim=8
+params.state_dim=39
 learner=IPPO(params)
 params.N_steps=1e4
 
@@ -23,7 +23,7 @@ while step<params.N_steps:
             learner.add_reward_terminal([reward]*3,done)
             R+=reward
         print(step,R)
-    learner.train(step*4000)
+    learner.train(step)
     
 
 
