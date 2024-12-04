@@ -33,13 +33,23 @@ class armsim:
 	def done(self):
 		return self.time>1000
 
-	def reward(self):
+	def G(self):
 		box_pos=self.d.qpos[:3]
 		x,y,z=box_pos
 		if z<0.1:
 			return -10
 		return x
-		return 0.0
+
+	def local(self):
+		box_pos=self.d.qpos[:3]
+		r=[]
+		for abc in ["a","b","c"]:
+			id = self.m.body('right_finger_'+abc).id
+			hand_pos=self.d.xpos[id]
+			vec=hand_pos-box_pos
+			dist=-np.sqrt(np.sum(vec*vec))
+			r.append(dist)
+		return r
 	
 	def state(self):
 		pos=self.d.qpos[7:]
@@ -65,7 +75,7 @@ class armsim:
 			if time_until_next_step > 0:
 				time.sleep(time_until_next_step)
 			self.step_start=time.time()
-		return self.state(),self.reward(),self.done()
+		return self.state(),self.G(),self.local(),self.done()
 
 
 if __name__ =="__main__":
@@ -76,7 +86,7 @@ if __name__ =="__main__":
 		done=False
 		while not done:
 			action=[[0]*8]*3
-			state,reward,done=sim.step(action)
+			state,G,reward,done=sim.step(action)
 			print(state.shape)
 			print(state)
 

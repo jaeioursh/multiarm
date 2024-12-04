@@ -255,6 +255,7 @@ class PPO:
 			#elf.params.writer.add_scalars(prefix+"Action/STD_Vals",{str(i):self.policy.log_action_var[i] for i in range(self.params.action_dim)},idx)	
 			self.params.writer.add_scalar(prefix+"Loss/Advantage_min", min(advantages),idx)
 			self.params.writer.add_scalar(prefix+"Loss/Advantage_max", max(advantages),idx)
+			self.params.writer.add_scalar(prefix+"Reward", sum(self.buffer.rewards)/self.params.N_batch,idx)
 
 		# Copy new weights into old policy
 		self.policy_old.load_state_dict(self.policy.state_dict())

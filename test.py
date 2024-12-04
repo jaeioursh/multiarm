@@ -74,7 +74,7 @@ def test_mujoco():
 	for i in range(1000):
 		d.qpos=pos
 		d.qvel=vel 
-		for j in range(200):
+		for j in range(2000000):
 			act=[1]*8+[2]*8+[5]*8
 			d.ctrl=act
 			mujoco.mj_step(m, d)

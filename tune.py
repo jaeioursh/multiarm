@@ -9,8 +9,8 @@ PRUNE=0
 def objective(trial):
     env=armsim()
     params=Params(n_agents=3)
-    params.action_dim=10
-    params.state_dim=41
+    params.action_dim=8
+    params.state_dim=39
     params.N_steps=1e6
     params.beta_ent=trial.suggest_float("entropy", .00001, 0.1, log=True)
     params.lr_actor=trial.suggest_float("learn_rate", 1e-6, 1e-3, log=True)
@@ -31,9 +31,9 @@ def objective(trial):
             while not done:
                 step+=1
                 action=learner.act(state)
-                state,reward,done=env.step(action)
-                learner.add_reward_terminal([reward]*3,done)
-                running_reward+=reward
+                state,G,reward,done=env.step(action*2)
+                learner.add_reward_terminal(reward,done)
+                running_reward+=reward[0]
         r_hist.append(running_reward/float(params.N_batch))
         trial.report(max(r_hist), step)
         if trial.should_prune() and PRUNE:
@@ -47,10 +47,10 @@ def run_study(worker_id):
         study_name="multiagent_opt",  # Load the existing study
         storage='sqlite:///optimize_prune_'+str(PRUNE)+'.db'  # Shared SQLite storage
     )
-    study.optimize(objective, n_trials=10)  
+    study.optimize(objective, n_trials=15)  
 
 if __name__ == "__main__":
-    n_workers=2
+    n_workers=6
     sampler=optuna.samplers.GPSampler()
     direction="maximize"
     name="multiagent_opt"
