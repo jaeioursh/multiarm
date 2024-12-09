@@ -8,7 +8,7 @@ import multiprocessing
 PRUNE=0
 def objective(trial):
     env=armsim()
-    params=Params(n_agents=3)
+    params=Params(n_agents=1)
     params.action_dim=8
     params.state_dim=39
     params.N_steps=1e6
@@ -30,9 +30,9 @@ def objective(trial):
             done=False
             while not done:
                 step+=1
-                action=learner.act(state)
-                state,G,reward,done=env.step(action*2)
-                learner.add_reward_terminal(reward,done)
+                action=learner.act([state[0]])
+                state,G,reward,done=env.step([action*2]*3)
+                learner.add_reward_terminal([reward[0]],done)
                 running_reward+=reward[0]
         r_hist.append(running_reward/float(params.N_batch))
         trial.report(max(r_hist), step)
