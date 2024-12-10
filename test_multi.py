@@ -8,9 +8,9 @@ def train():
     params=Params(fname="save",n_agents=1)
     params.action_dim=8
     params.state_dim=39
-    params.action_std=0
-    params.beta_ent=0.001
-    params.lr_actor=8e-5
+    params.action_std=-1.0
+    params.beta_ent=0.0005
+    params.lr_actor=3e-4
     params.N_batch=6
     params.K_epochs=18
     params.lr_critic=params.lr_actor*10.0
@@ -32,9 +32,10 @@ def train():
                 learner.add_reward_terminal([reward[0]],done)
                 R+=np.array(reward)
             print(step,R)
-            if R[0]>rmax:
-                rmax=R[0]
-                learner.save("logs/a")
+            
+            #rmax=R[0]
+            #print("Best: "+str(rmax)+"  step: "+str(rmax))
+            learner.save("logs/a")
         learner.train(step)
         
 def view():

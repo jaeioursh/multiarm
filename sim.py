@@ -57,10 +57,13 @@ class armsim:
 			self.prev_dist=dists
 			return np.zeros(3)
 		else:
+			'''
 			r=self.prev_dist-dists
 			self.prev_dist=dists
 			r*=3
 			r[r<0]*=2
+			'''
+			r=-dists
 			return r
 	
 	def state(self):
