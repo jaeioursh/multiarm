@@ -84,4 +84,4 @@ def test_mujoco():
 
 
 if __name__ == '__main__':
-	test_mujoco()
+	run_test1()

@@ -31,7 +31,7 @@ def objective(trial):
             while not done:
                 step+=1
                 action=learner.act([state[0]])
-                state,G,reward,done=env.step([action*2]*3)
+                state,G,reward,done=env.step([action]*3)
                 learner.add_reward_terminal([reward[0]],done)
                 running_reward+=reward[0]
         r_hist.append(running_reward/float(params.N_batch))

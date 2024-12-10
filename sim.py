@@ -14,7 +14,7 @@ class armsim:
 		self.n_joints=self.m.nu
 		if view:
 			self.viewer = mujoco.viewer.launch_passive(self.m, self.d)
-			self.viewer.cam.distance = self.m.stat.extent * 2.0
+			self.viewer.cam.distance = self.m.stat.extent * 5.0
 		else:
 			self.viewer = None
 		self.reset()
@@ -28,6 +28,9 @@ class armsim:
 		self.d.qpos=np.array(box_pos+armpos*3)
 		self.d.qvel=np.array(box_vel+[0]*3*len(armpos))
 		self.step_start=time.time()
+		self.prev_dist=None
+		self.prev_box=None
+		self.local()
 		return self.state()
 	
 	def done(self):
@@ -42,14 +45,23 @@ class armsim:
 
 	def local(self):
 		box_pos=self.d.qpos[:3]
-		r=[]
+		dists=[]
 		for abc in ["a","b","c"]:
 			id = self.m.body('right_finger_'+abc).id
 			hand_pos=self.d.xpos[id]
 			vec=hand_pos-box_pos
-			dist=-np.sqrt(np.sum(vec*vec))
-			r.append(dist)
-		return r
+			dist=np.sqrt(np.sum(vec*vec))
+			dists.append(dist)
+		dists=np.array(dists)
+		if self.prev_dist is None:
+			self.prev_dist=dists
+			return np.zeros(3)
+		else:
+			r=self.prev_dist-dists
+			self.prev_dist=dists
+			r*=3
+			r[r<0]*=2
+			return r
 	
 	def state(self):
 		pos=self.d.qpos[7:]
@@ -67,7 +79,7 @@ class armsim:
 	def step(self,action):
 		self.time+=1
 		#print(self.d.ctrl.shape)
-		self.d.ctrl=np.array(action).flatten()*1.5
+		self.d.ctrl=np.array(action).flatten()*3.0
 		mujoco.mj_step(self.m, self.d)
 		if self.viewer is not None and self.viewer.is_running():
 			self.viewer.sync()
