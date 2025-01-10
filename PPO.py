@@ -238,7 +238,7 @@ class PPO:
 			# take gradient step
 			self.opt_actor.zero_grad()
 			loss_actor.backward()
-			#torch.nn.utils.clip_grad_norm_(self.policy.actor.parameters(), self.params.grad_clip)
+			torch.nn.utils.clip_grad_norm_(self.policy.actor.parameters(), self.params.grad_clip)
 			self.opt_actor.step()
 
 			self.opt_critic.zero_grad()
@@ -283,7 +283,7 @@ class Params:
 		self.action_std = -0.8	  
 		self.decay_rate=0.07      #per 100k steps
 		self.random_seed = 0
-		self.grad_clip=0.5
+		self.grad_clip=1.0
 
 		self.action_dim = 4
 		self.state_dim = 24

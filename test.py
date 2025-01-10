@@ -11,6 +11,7 @@ def test1(fname):
 	env_view = gym.make("BipedalWalker-v3",render_mode="human")
 
 	params = Params(fname)
+	params.action_std=-0.5
 	ppo_agent = PPO(params)
 	total_steps=0
 	i=0

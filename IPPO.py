@@ -33,3 +33,4 @@ class IPPO:
     def load(self,fname):
         for i,agent in zip(range(self.n_agents),self.agents):
             agent.load(fname+str(i))
+            
