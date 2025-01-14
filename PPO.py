@@ -175,10 +175,10 @@ class PPO:
 			else:
 				delta = rewards[i] + self.params.gamma * values[i + 1]  - values[i]
 				gae = delta + self.params.gamma * self.params.lmbda * gae
-			returns.insert(0, [(gae).item()])
-
+			returns.append([(gae).item()])
+		returns = [r for r in reversed(returns)]
 		adv = np.array(returns)
-		#adv=(adv - np.mean(adv)) / (np.std(adv) + 1e-10)
+		adv=(adv - np.mean(adv)) / (np.std(adv) + 1e-10)
 		return torch.from_numpy(adv).to(self.device)
 
 	def update(self,idx):
@@ -194,7 +194,7 @@ class PPO:
 			
 		# Normalizing the rewards
 		rewards = torch.tensor(rewards, dtype=torch.float32).to(self.device)
-		rewards= torch.clip(rewards,-1,1).detach()
+
 		#rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-7)
 
 		# convert list to tensor

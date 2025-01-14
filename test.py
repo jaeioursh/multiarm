@@ -7,11 +7,15 @@ import mujoco
 import mujoco.viewer
 from time import sleep
 def test1(fname):
-	env = gym.make("BipedalWalker-v3")
-	env_view = gym.make("BipedalWalker-v3",render_mode="human")
+	env = gym.make("Hopper-v5")
+	env_view = gym.make("Hopper-v5",render_mode="human")
 
 	params = Params(fname)
-	params.action_std=-0.5
+	params.action_std=-0.2
+	params.action_dim=3
+	params.state_dim=11
+	params.K_epochs=10
+	params.beta_ent=0.0
 	ppo_agent = PPO(params)
 	total_steps=0
 	i=0
@@ -27,7 +31,7 @@ def test1(fname):
 				state, reward, done, _,_ = env.step(action)
 				if idx==params.max_steps:
 					done=True
-				ppo_agent.add_reward_terminal(reward*0.1,done)
+				ppo_agent.add_reward_terminal(reward,done)
 
 			total_steps+=idx
 		if i%1==0:
