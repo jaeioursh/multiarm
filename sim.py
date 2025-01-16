@@ -15,6 +15,9 @@ class armsim3:
 		else:
 			self.viewer = None
 		self.reset()
+		self.action_dim=8
+		self.state_dim=39
+		self.n_agents=3
 		
 	def reset(self):
 				#pos     quaternion
@@ -101,6 +104,9 @@ class armsim2:
 		else:
 			self.viewer = None
 		self.reset()
+		self.action_dim=7
+		self.state_dim=15#29
+		self.n_agents=2
 		
 	def reset(self):
 				#pos     quaternion
@@ -159,6 +165,7 @@ class armsim2:
 		pos=np.array(pos).reshape((2,8))
 		vel=np.array(vel).reshape((2,8))
 		state=np.concatenate([pos,vel,box_pos,box_vel],axis=1,dtype=np.float32)
+		state=np.concatenate([pos,box_pos],axis=1,dtype=np.float32)
 		state=np.clip(state,-20,20)
 		return  state
 
