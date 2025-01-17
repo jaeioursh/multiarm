@@ -44,8 +44,8 @@ class alignment_network(nn.Module):
 			return
 		for i in range(self.train_steps):
 			buffer=sample(self.buffer,64)
-			r=torch.from_numpy(np.array([b[0] for b in buffer]))
-			g=torch.from_numpy(np.array([b[1] for b in buffer]))
+			r=torch.from_numpy(np.array([[b[0]] for b in buffer]))
+			g=torch.from_numpy(np.array([[b[1]] for b in buffer]))
 			state=torch.from_numpy(np.array([b[2] for b in buffer]))
 			shaping=self.network(state)
 			self.opt.zero_grad()
