@@ -4,9 +4,11 @@ from sim import armsim2,armsim3
 import numpy as np
 import sys
 import pickle as pkl
+from alignment_network import reward_align
+
 def train():
     env=armsim2(0)
-    params=Params(fname="save",n_agents=1)#env.n_agents)
+    params=Params(fname="save",n_agents=env.n_agents)
     params.action_dim=env.action_dim
     params.state_dim=env.state_dim
     params.action_std=-1.0
@@ -14,8 +16,16 @@ def train():
     params.N_batch=2
     params.K_epochs=10
     params.N_steps=3e6
+
+
+    params.aln_hidden=64
+    params.aln_lr=0.001
+    params.aln_train_steps=100
+    params.deq_len=10000
+
     params.write()
     learner=IPPO(params)
+    shaping=reward_align(params)
     step=0
     rmax=-1e10
     data=[]
@@ -29,10 +39,12 @@ def train():
             R=np.zeros(env.n_agents)
             while not done:
                 step+=1
-                action=learner.act([state[0]])
-                state,G,reward,done=env.step([action]*env.n_agents)
+                action=learner.act(state)
+                state,G,reward,done=env.step(action)
+                shaping.add(reward,G,state)
+                reward=shaping.shape(reward,state)
                 data.append([state[0],G,reward[0]])
-                learner.add_reward_terminal([reward[0]],done)
+                learner.add_reward_terminal(reward,done)
                 R+=np.array(reward)
             print(step,R)
             
@@ -41,6 +53,7 @@ def train():
                 learner.save("logs/a0")
                 rmax=R[0]
             learner.save("logs/a1")
+        shaping.train()
         learner.train(step)
         if idx%10==0:
             with open("logs/data.dat","wb") as f:
