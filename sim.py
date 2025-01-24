@@ -118,6 +118,7 @@ class armsim2:
 		self.d.qvel=np.array(box_vel+[0]*2*len(armpos))
 		self.step_start=time.time()
 		self.prev_dist=None
+		self.start_dist=None
 		self.prev_box=None
 		self.local()
 		return self.state()
@@ -128,8 +129,8 @@ class armsim2:
 	def G(self):
 		box_pos=self.d.qpos[:3]
 		x,y,z=box_pos
-		if z<0.1:
-			return -10
+		#if z<0.1:
+		#	return x-0.5
 		return x
 
 	def local(self):
@@ -146,13 +147,8 @@ class armsim2:
 			self.prev_dist=dists
 			return np.zeros(3)
 		else:
-			'''
+			
 			r=self.prev_dist-dists
-			self.prev_dist=dists
-			r*=3
-			r[r<0]*=2
-			'''
-			r=-dists
 			return r
 	
 	def state(self):

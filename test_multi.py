@@ -17,11 +17,10 @@ def train():
     params.K_epochs=10
     params.N_steps=3e6
 
-
     params.aln_hidden=64
-    params.aln_lr=0.001
+    params.aln_lr=0.0003
     params.aln_train_steps=100
-    params.deq_len=10000
+    params.deq_len=100000
 
     params.write()
     learner=IPPO(params)
@@ -37,6 +36,7 @@ def train():
             done=False
             state=env.reset()
             R=np.zeros(env.n_agents)
+            cumulative_G=0.0
             while not done:
                 step+=1
                 action=learner.act(state)
@@ -45,15 +45,16 @@ def train():
                 reward=shaping.shape(reward,state)
                 data.append([state[0],G,reward[0]])
                 learner.add_reward_terminal(reward,done)
+                cumulative_G+=G
                 R+=np.array(reward)
             print(step,R)
-            
+            params.writer.add_scalar("Team/Global Reward", cumulative_G ,idx)
             if rmax<R[0]:
                 #print("Best: "+str(rmax)+"  step: "+str(rmax))
                 learner.save("logs/a0")
                 rmax=R[0]
             learner.save("logs/a1")
-        shaping.train()
+        shaping.train(step)
         learner.train(step)
         if idx%10==0:
             with open("logs/data.dat","wb") as f:

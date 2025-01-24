@@ -37,21 +37,39 @@ class alignment_network(nn.Module):
 		state=torch.from_numpy(np.array(state))
 		return r+self.network(state).item()
 
-	
+	def sample(self):
+		std_best=1e9
+		RGS=None
+		for i in range(10):
+			buffer=sample(self.buffer,64)
+			r=np.array([[b[0]] for b in buffer])
+			g=np.array([[b[1]] for b in buffer])
+			state=np.array([b[2] for b in buffer])
+			g_std=np.std(g)
+			if g_std<std_best:
+				std_best=g_std
+				RGS=(r,g,state)
+		RGS=(torch.from_numpy(itr) for itr in RGS)
+		return RGS
+
 	def train(self):
 		self.step+=1
+		L=[]
+		S=[]
 		if len(self.buffer)<100:
 			return
 		for i in range(self.train_steps):
-			buffer=sample(self.buffer,64)
-			r=torch.from_numpy(np.array([[b[0]] for b in buffer]))
-			g=torch.from_numpy(np.array([[b[1]] for b in buffer]))
-			state=torch.from_numpy(np.array([b[2] for b in buffer]))
+			r,g,state=self.sample()
 			shaping=self.network(state)
+			S.append(shaping.detach().numpy())
 			self.opt.zero_grad()
-			loss = self.alignment_loss(g,shaping+r)+ 0.05*torch.mean(torch.square(shaping))
+			loss = self.alignment_loss(g,shaping+r)
+			L.append(loss.detach().item())
+			loss+=0.05*torch.mean(torch.square(shaping))
 			loss.backward()
 			self.opt.step()
+		S=np.array(S)
+		return np.mean(L),np.max(S),np.min(S)
 
 
 	def add_sample(self,r,g,state):
@@ -59,6 +77,7 @@ class alignment_network(nn.Module):
 
 class reward_align:
 	def __init__(self,params):
+		self.params=params
 		self.nets=[alignment_network(params,i) for i in range(params.n_agents)]
 
 	def add(self,R,G,State):
@@ -68,6 +87,11 @@ class reward_align:
 	def shape(self,R,State):
 		return [net.predict(r,state) for r,state,net in zip(R,State,self.nets)]
 	
-	def train(self):
-		for net in self.nets:
-			net.train()
+	def train(self,idx):
+		agent=0
+		for net in self.nets:		
+			loss,shape_max,shape_min=net.train()
+			self.params.writer.add_scalar("Shaping/Alignment_loss/"+str(agent), loss,idx)
+			self.params.writer.add_scalar("Shaping/Shaping_val_max/"+str(agent), shape_max,idx)
+			self.params.writer.add_scalar("Shaping/Shaping_val_min/"+str(agent), shape_min,idx)
+			agent+=1
