@@ -105,7 +105,7 @@ class armsim2:
 			self.viewer = None
 		self.reset()
 		self.action_dim=7
-		self.state_dim=15#29
+		self.state_dim=15 + 2 #2 finger sensors
 		self.n_agents=2
 		
 	def reset(self):
@@ -120,7 +120,7 @@ class armsim2:
 		self.prev_dist=None
 		self.start_dist=None
 		self.prev_box=None
-		self.local()
+		self.sense=None
 		return self.state()
 	
 	def done(self):
@@ -145,13 +145,20 @@ class armsim2:
 		dists=np.array(dists)
 		if self.prev_dist is None:
 			self.prev_dist=dists
-			return np.zeros(3)
+			r_pos = np.zeros(2)
 		else:
-			
-			r=self.prev_dist-dists
-			return r
-	
+			r_pos=self.prev_dist-dists
+
+		if self.sense is not None:
+			touch = self.sense.copy()
+			touch[touch>1]=1
+			r_touch=np.array([touch[0,0]+touch[0,1],touch[1,0]+touch[1,1]])
+		else:
+			r_touch = np.zeros(2)
+
+		return r_touch+r_pos
 	def state(self):
+		self.sense=np.array(self.d.sensordata).reshape((2,2))
 		pos=self.d.qpos[7:]
 		vel=self.d.qvel[6:]
 		box_pos=self.d.qpos[:7]
@@ -161,7 +168,7 @@ class armsim2:
 		pos=np.array(pos).reshape((2,8))
 		vel=np.array(vel).reshape((2,8))
 		state=np.concatenate([pos,vel,box_pos,box_vel],axis=1,dtype=np.float32)
-		state=np.concatenate([pos,box_pos],axis=1,dtype=np.float32)
+		state=np.concatenate([pos,box_pos,self.sense],axis=1,dtype=np.float32)
 		state=np.clip(state,-20,20)
 		return  state
 

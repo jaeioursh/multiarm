@@ -298,6 +298,13 @@
     <joint joint1="right/left_finger" joint2="right/right_finger" polycoef="0 1 0 0 0"/>
   </equality>
 
+  <sensor>
+  <touch name="left/left_finger_touch" site="left/left_finger"/>
+  <touch name="left/right_finger_touch" site="left/right_finger"/>
+  <touch name="right/left_finger_touch" site="right/left_finger"/>
+  <touch name="right/right_finger_touch" site="right/right_finger"/>
+  </sensor>
+
   <include file="joint_position_actuators.xml"/>
 
 </mujoco>
