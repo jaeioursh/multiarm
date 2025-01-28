@@ -41,20 +41,20 @@ def train():
                 step+=1
                 action=learner.act(state)
                 state,G,reward,done=env.step(action)
-                shaping.add(reward,G,state)
-                reward=shaping.shape(reward,state)
-                data.append([state[0],G,reward[0]])
+                #shaping.add(reward,G,state)
+                #reward=shaping.shape(reward,state)
+                #data.append([state[0],G,reward[0]])
                 learner.add_reward_terminal(reward,done)
                 cumulative_G+=G
                 R+=np.array(reward)
             print(step,R)
             params.writer.add_scalar("Team/Global Reward", cumulative_G ,idx)
             if rmax<R[0]:
-                #print("Best: "+str(rmax)+"  step: "+str(rmax))
+                print("Best: "+str(R[0])+"  step: "+str(j))
                 learner.save("logs/a0")
                 rmax=R[0]
             learner.save("logs/a1")
-        shaping.train(step)
+        #shaping.train(step)
         learner.train(step)
         if idx%10==0:
             with open("logs/data.dat","wb") as f:
@@ -62,7 +62,7 @@ def train():
         
 def view():
     env=armsim2(1)
-    params=Params(n_agents=1)#env.n_agents)
+    params=Params(n_agents=env.n_agents)
     params.action_dim=env.action_dim
     params.state_dim=env.state_dim
     learner=IPPO(params)
@@ -73,14 +73,34 @@ def view():
         R=np.zeros(env.n_agents)
         r=[]
         while not done:
-            action=learner.act_deterministic([state[0]])
-            state,G,reward,done=env.step([action]*env.n_agents)
+            action=learner.act_deterministic(state)
+            state,G,reward,done=env.step(action)
             r.append(reward[0])
             R+=np.array(reward)
         print(R,max(r),min(r))
 
+def interactive():
+    import mujoco
+    import os
+    import time
+
+    # Load an MJCF model
+
+    model = mujoco.MjModel.from_xml_path('aloha/aloha2.xml')
+    data = mujoco.MjData(model)
+
+    # Create the interactive viewer
+    viewer = mujoco.viewer.launch_passive(model, data)
+
+    # Simulate and render
+    while True:
+        mujoco.mj_step(model, data)
+        viewer.sync()
+        #viewer.render()
 
 if len(sys.argv)==1:
     train()
+elif len(sys.argv)==3:
+    interactive()
 else:    
     view()

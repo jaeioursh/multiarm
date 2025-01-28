@@ -150,12 +150,13 @@ class armsim2:
 			r_pos=self.prev_dist-dists
 
 		if self.sense is not None:
-			touch = self.sense.copy()
-			touch[touch>1]=1
-			r_touch=np.array([touch[0,0]+touch[0,1],touch[1,0]+touch[1,1]])
+			touch = self.sense.copy()/100
+			#touch[touch>1]=1
+			r_touch=np.array([touch[0,0]+touch[0,1],touch[1,0]+touch[1,1]])*10
 		else:
 			r_touch = np.zeros(2)
-
+		if(sum(r_touch) != 0):
+			print(r_touch)
 		return r_touch+r_pos
 	def state(self):
 		self.sense=np.array(self.d.sensordata).reshape((2,2))
