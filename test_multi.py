@@ -80,22 +80,9 @@ def view():
         print(R,max(r),min(r))
 
 def interactive():
-    import mujoco
-    import os
-    import time
-
-    # Load an MJCF model
-
-    model = mujoco.MjModel.from_xml_path('aloha/aloha2.xml')
-    data = mujoco.MjData(model)
-
-    # Create the interactive viewer
-    viewer = mujoco.viewer.launch_passive(model, data)
-
-    # Simulate and render
-    while True:
-        mujoco.mj_step(model, data)
-        viewer.sync()
+    env=armsim2(1)
+    while 1:
+        env.step(None,False)
         #viewer.render()
 
 if len(sys.argv)==1:

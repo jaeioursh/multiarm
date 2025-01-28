@@ -28,6 +28,7 @@
   </asset>
 
 
+
   <default>
     <default class="vx300s">
       <joint axis="0 1 0" actuatorfrcrange="-35 35"/>
@@ -103,15 +104,15 @@
   <worldbody>
     <light mode="targetbodycom" target="left/gripper_link" pos="-.5 .7 2.5" cutoff="55"/>
     <light mode="targetbodycom" target="right/gripper_link" pos=".5 .7 2.5" cutoff="55"/>
-    <camera name="teleoperator_pov" pos="0 -1.354 0.685" xyaxes="1 0 0 0 0.2 .8"/>
-    <camera name="collaborator_pov" pos="0 1.5 0.8" xyaxes="-1 0 0 0 -0.2 .8"/>
     <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
     <geom name="pedestal" pos="-1 .5 0" type="box" size="0.03 0.03 0.2"/>
+
     <body name="box_body" pos="0 0 0">
       <joint name="box_joint" type="free"/>
       <geom type="box" size="0.02 0.02 0.02" rgba="0.8 0.2 0.2 1"/>
     </body>
-    <body name="left/base_link" childclass="vx300s" pos="-0.5 .3 0" quat="1 0 0 1">
+
+ <body name="left/base_link" childclass="vx300s" pos="-0.5 .3 0">
       <inertial pos="-0.0534774 -0.000562575 0.0205961" quat="-0.00292324 0.712517 0.00480387 0.701633" mass="0.969034"
         diaginertia="0.0071633 0.00602451 0.00169819"/>
       <geom quat="1 0 0 1" class="visual" mesh="vx300s_1_base"/>
@@ -164,7 +165,7 @@
                     <geom class="collision" pos="0 -0.0824748 -0.0095955" quat="0 0 -0.21644 -0.976296" type="mesh" mesh="d405_solid"/>
                     <camera name="wrist_cam_left" pos="0 -0.0824748 -0.0095955" mode="fixed" euler="2.70525955359 0 0"
                             focal="1.93e-3 1.93e-3" resolution="1280 720" sensorsize="3896e-6 2140e-6"/>
-                   <body name="left/left_finger_link" pos="0.0191 -0.0141637 0.0211727" quat="1 -1 -1 1">
+                   <body name="left/left_finger_link" pos="0.03 -0.0141637 0.0211727" quat="1 -1 -1 1">
                       <inertial pos="0.0143478 -0.0284791 0.0122897" quat="0.535486 0.458766 -0.450407 0.547651"
                         mass="0.0862937" diaginertia="5.86848e-05 4.46887e-05 1.8397e-05"/>
                       <joint name="left/left_finger" class="left_finger"/>
@@ -175,9 +176,9 @@
                       <geom name="left/left_g0" pos="0.013  -0.0892 0.0268" class="sphere_collision"/>
                       <geom name="left/left_g1" pos="0.0222 -0.0892 0.0268" class="sphere_collision"/>
                       <geom name="left/left_g2" pos="0.0182 -0.0845 0.0266" class="sphere_collision"/>
-                      <site name="left/left_finger" pos="0.015 -0.06 0.02"/>
+                      <site name="left/left_finger" pos="0.015 -0.06 0.02" size=".1 .1 .1"/>
                     </body>
-                    <body name="left/right_finger_link" pos="-0.0191 -0.0141637 0.0211727" quat="1 1 1 1">
+                    <body name="left/right_finger_link" pos="-0.03 -0.0141637 0.0211727" quat="1 1 1 1">
                       <inertial pos="0.0143711 0.0284792 0.0121421" quat="0.461317 0.537615 -0.545478 0.447894"
                         mass="0.0862932" diaginertia="5.86828e-05 4.46887e-05 1.83949e-05"/>
                       <joint name="left/right_finger" class="right_finger"/>
@@ -188,7 +189,7 @@
                       <geom name="left/right_g0" pos="0.013  0.0892 0.0268" class="sphere_collision"/>
                       <geom name="left/right_g1" pos="0.0222 0.0892 0.0268" class="sphere_collision"/>
                       <geom name="left/right_g2" pos="0.0182 0.0845 0.0266" class="sphere_collision"/>
-                      <site name="left/right_finger" pos="0.015 0.06 0.02"/>
+                      <site name="left/right_finger" pos="0.015 0.06 0.02" size=".1 .1 .1"/>
                     </body>
                   </body>
                 </body>
@@ -199,7 +200,7 @@
       </body>
     </body>
 
-    <body name="right/base_link" childclass="vx300s" pos="0.7 .3 0" quat="1 0 0 1">
+    <body name="right/base_link" childclass="vx300s" pos="0.7 .3 0" quat="0 0 0 1">
       <inertial pos="-0.0534774 -0.000562575 0.0205961" quat="-0.00292324 0.712517 0.00480387 0.701633" mass="0.969034"
         diaginertia="0.0071633 0.00602451 0.00169819"/>
       <geom quat="1 0 0 1" class="visual" mesh="vx300s_1_base"/>
@@ -252,7 +253,7 @@
                     <geom class="collision" pos="0 -0.0824748 -0.0095955" quat="0 0 -0.21644 -0.976296" type="mesh" mesh="d405_solid"/>
                     <camera name="wrist_cam_right" pos="0 -0.0824748 -0.0095955" mode="fixed" euler="2.70525955359 0 0"
                             focal="1.93e-3 1.93e-3" resolution="1280 720" sensorsize="3896e-6 2140e-6"/>
-                    <body name="right/left_finger_link" pos="0.0191 -0.0141637 0.0211727" quat="1 -1 -1 1">
+                    <body name="right/left_finger_link" pos="0.03 -0.0141637 0.0211727" quat="1 -1 -1 1">
                       <inertial pos="0.0143478 -0.0284791 0.0122897" quat="0.535486 0.458766 -0.450407 0.547651"
                         mass="0.0862937" diaginertia="5.86848e-05 4.46887e-05 1.8397e-05"/>
                       <joint name="right/left_finger" class="left_finger"/>
@@ -263,9 +264,9 @@
                       <geom name="right/left_g0" pos="0.013  -0.0892 0.0268" class="sphere_collision"/>
                       <geom name="right/left_g1" pos="0.0222 -0.0892 0.0268" class="sphere_collision"/>
                       <geom name="right/left_g2" pos="0.0182 -0.0845 0.0266" class="sphere_collision"/>
-                      <site name="right/left_finger" pos="0.015 -0.06 0.02"/>
+                      <site name="right/left_finger" pos="0.015 -0.06 0.02" size=".1 .1 .1"/>
                     </body>
-                    <body name="right/right_finger_link" pos="-0.0191 -0.0141637 0.0211727" quat="1 1 1 1">
+                    <body name="right/right_finger_link" pos="-0.03 -0.0141637 0.0211727" quat="1 1 1 1">
                       <inertial pos="0.0143711 0.0284792 0.0121421" quat="0.461317 0.537615 -0.545478 0.447894"
                         mass="0.0862932" diaginertia="5.86828e-05 4.46887e-05 1.83949e-05"/>
                       <joint name="right/right_finger" class="right_finger"/>
@@ -276,7 +277,7 @@
                       <geom name="right/right_g0" pos="0.013  0.0892 0.0268" class="sphere_collision"/>
                       <geom name="right/right_g1" pos="0.0222 0.0892 0.0268" class="sphere_collision"/>
                       <geom name="right/right_g2" pos="0.0182 0.0845 0.0266" class="sphere_collision"/>
-                      <site name="right/right_finger" pos="0.015 0.06 0.02"/>
+                      <site name="right/right_finger" pos="0.015 0.06 0.02" size=".1 .1 .1"/>
                     </body>
                   </body>
                 </body>
@@ -306,5 +307,5 @@
   </sensor>
 
   <include file="joint_position_actuators.xml"/>
-
+ 
 </mujoco>

@@ -155,8 +155,6 @@ class armsim2:
 			r_touch=np.array([touch[0,0]+touch[0,1],touch[1,0]+touch[1,1]])*10
 		else:
 			r_touch = np.zeros(2)
-		if(sum(r_touch) != 0):
-			print(r_touch)
 		return r_touch+r_pos
 	def state(self):
 		self.sense=np.array(self.d.sensordata).reshape((2,2))
@@ -173,10 +171,15 @@ class armsim2:
 		state=np.clip(state,-20,20)
 		return  state
 
-	def step(self,action):
+	def step(self,action,do_act=True):
 		self.time+=1
 		#print(self.d.ctrl.shape)
-		self.d.ctrl=np.array(action).flatten()*3.0
+		if do_act:
+			action=np.array(action).flatten()*0.5+0.5
+			limits=np.array(self.m.actuator_ctrlrange).T
+			lower,upper=limits
+			action = action*(upper-lower)+lower
+			self.d.ctrl=action
 		mujoco.mj_step(self.m, self.d)
 		if self.viewer is not None and self.viewer.is_running():
 			self.viewer.sync()
