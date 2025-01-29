@@ -136,13 +136,14 @@ class armsim2:
 	def local(self):
 		box_pos=self.d.qpos[:3]
 		dists=[]
-		for abc in ["left/right_finger_link","right/right_finger_link"]:
+		for abc in ["left/gripper_base","right/gripper_base"]:
 			id = self.m.body(abc).id
 			hand_pos=self.d.xpos[id]
 			vec=hand_pos-box_pos
 			dist=np.sqrt(np.sum(vec*vec))
 			dists.append(dist)
 		dists=np.array(dists)
+		#print(dists)
 		if self.prev_dist is None:
 			self.prev_dist=dists
 			r_pos = np.zeros(2)
@@ -150,9 +151,10 @@ class armsim2:
 			r_pos=self.prev_dist-dists
 
 		if self.sense is not None:
-			touch = self.sense.copy()/100
-			#touch[touch>1]=1
-			r_touch=np.array([touch[0,0]+touch[0,1],touch[1,0]+touch[1,1]])*10
+			touch = self.sense.copy()/10
+			touch[touch>1]=1
+			r_touch=np.array([touch[0,0]+touch[0,1],touch[1,0]+touch[1,1]])*0.5
+			r_touch[dists>0.3]=0.0
 		else:
 			r_touch = np.zeros(2)
 		return r_touch+r_pos
@@ -168,7 +170,7 @@ class armsim2:
 		vel=np.array(vel).reshape((2,8))
 		state=np.concatenate([pos,vel,box_pos,box_vel],axis=1,dtype=np.float32)
 		state=np.concatenate([pos,box_pos,self.sense],axis=1,dtype=np.float32)
-		state=np.clip(state,-20,20)
+		state=np.clip(state,-10,10)
 		return  state
 
 	def step(self,action,do_act=True):
