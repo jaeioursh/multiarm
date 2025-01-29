@@ -151,15 +151,15 @@ class armsim2:
 			r_pos=self.prev_dist-dists
 
 		if self.sense is not None:
-			touch = self.sense.copy()/10
-			touch[touch>1]=1
+			touch = self.sense.copy()
+			touch[touch<0.0]=1
 			r_touch=np.array([touch[0,0]+touch[0,1],touch[1,0]+touch[1,1]])*0.5
 			r_touch[dists>0.3]=0.0
 		else:
 			r_touch = np.zeros(2)
 		return r_touch+r_pos
 	def state(self):
-		self.sense=np.array(self.d.sensordata).reshape((2,2))
+		self.sense=np.array(self.d.sensordata).reshape((2,2))*5
 		pos=self.d.qpos[7:]
 		vel=self.d.qvel[6:]
 		box_pos=self.d.qpos[:7]
@@ -181,6 +181,7 @@ class armsim2:
 			limits=np.array(self.m.actuator_ctrlrange).T
 			lower,upper=limits
 			action = action*(upper-lower)+lower
+			action[[3,4,5,10,11,12]]=0.0 #keep wrist from rotating
 			self.d.ctrl=action
 		mujoco.mj_step(self.m, self.d)
 		if self.viewer is not None and self.viewer.is_running():

@@ -300,10 +300,16 @@
   </equality>
 
   <sensor>
+  <distance body1="left/left_finger_link" body2="box_body"/>
+  <distance body1="left/right_finger_link" body2="box_body"/>
+  <distance body1="right/left_finger_link" body2="box_body"/>
+  <distance body1="right/right_finger_link" body2="box_body"/>
+  <!--
   <touch name="left/left_finger_touch" site="left/left_finger"/>
   <touch name="left/right_finger_touch" site="left/right_finger"/>
   <touch name="right/left_finger_touch" site="right/left_finger"/>
   <touch name="right/right_finger_touch" site="right/right_finger"/>
+  -->
   </sensor>
 
   <include file="joint_position_actuators.xml"/>
