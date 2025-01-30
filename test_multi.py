@@ -11,7 +11,7 @@ def train():
     params=Params(fname="save",n_agents=env.n_agents)
     params.action_dim=env.action_dim
     params.state_dim=env.state_dim
-    params.action_std=-1.0
+    params.action_std=-0.8
     params.beta_ent=0.0
     params.N_batch=2
     params.K_epochs=10

@@ -105,14 +105,14 @@
     <light mode="targetbodycom" target="left/gripper_link" pos="-.5 .7 2.5" cutoff="55"/>
     <light mode="targetbodycom" target="right/gripper_link" pos=".5 .7 2.5" cutoff="55"/>
     <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
-    <geom name="pedestal" pos="-1 .5 0" type="box" size="0.03 0.03 0.2"/>
+    <geom name="pedestal" pos="-1 .5 0" type="box" size="0.015 0.015 0.2"/>
 
     <body name="box_body" pos="0 0 0">
       <joint name="box_joint" type="free"/>
       <geom type="box" size="0.02 0.02 0.02" rgba="0.8 0.2 0.2 1"/>
     </body>
 
- <body name="left/base_link" childclass="vx300s" pos="-0.5 .3 0">
+ <body name="left/base_link" childclass="vx300s" pos="-0.5 .3 0" quat="1 0 0 1">
       <inertial pos="-0.0534774 -0.000562575 0.0205961" quat="-0.00292324 0.712517 0.00480387 0.701633" mass="0.969034"
         diaginertia="0.0071633 0.00602451 0.00169819"/>
       <geom quat="1 0 0 1" class="visual" mesh="vx300s_1_base"/>
@@ -176,7 +176,7 @@
                       <geom name="left/left_g0" pos="0.013  -0.0892 0.0268" class="sphere_collision"/>
                       <geom name="left/left_g1" pos="0.0222 -0.0892 0.0268" class="sphere_collision"/>
                       <geom name="left/left_g2" pos="0.0182 -0.0845 0.0266" class="sphere_collision"/>
-                      <site name="left/left_finger" pos="0.015 -0.06 0.02" size=".1 .1 .1"/>
+                      <site name="left/left_finger" pos="0.015 -0.06 0.02" size=".01 .01 .01"/>
                     </body>
                     <body name="left/right_finger_link" pos="-0.03 -0.0141637 0.0211727" quat="1 1 1 1">
                       <inertial pos="0.0143711 0.0284792 0.0121421" quat="0.461317 0.537615 -0.545478 0.447894"
@@ -189,7 +189,7 @@
                       <geom name="left/right_g0" pos="0.013  0.0892 0.0268" class="sphere_collision"/>
                       <geom name="left/right_g1" pos="0.0222 0.0892 0.0268" class="sphere_collision"/>
                       <geom name="left/right_g2" pos="0.0182 0.0845 0.0266" class="sphere_collision"/>
-                      <site name="left/right_finger" pos="0.015 0.06 0.02" size=".1 .1 .1"/>
+                      <site name="left/right_finger" pos="0.015 0.09 0.02" size=".01 .01 .01"/>
                     </body>
                   </body>
                 </body>
@@ -200,7 +200,7 @@
       </body>
     </body>
 
-    <body name="right/base_link" childclass="vx300s" pos="0.7 .3 0" quat="0 0 0 1">
+    <body name="right/base_link" childclass="vx300s" pos="0.7 .3 0" quat="1 0 0 1">
       <inertial pos="-0.0534774 -0.000562575 0.0205961" quat="-0.00292324 0.712517 0.00480387 0.701633" mass="0.969034"
         diaginertia="0.0071633 0.00602451 0.00169819"/>
       <geom quat="1 0 0 1" class="visual" mesh="vx300s_1_base"/>

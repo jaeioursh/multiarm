@@ -105,7 +105,7 @@ class armsim2:
 			self.viewer = None
 		self.reset()
 		self.action_dim=7
-		self.state_dim=15 + 2 #2 finger sensors
+		self.state_dim=15 + 2 + 1 #2 finger sensors
 		self.n_agents=2
 		
 	def reset(self):
@@ -121,6 +121,7 @@ class armsim2:
 		self.start_dist=None
 		self.prev_box=None
 		self.sense=None
+		self.local()
 		return self.state()
 	
 	def done(self):
@@ -134,32 +135,36 @@ class armsim2:
 		return x
 
 	def local(self):
+		#TODO: add penalty for falling box
 		box_pos=self.d.qpos[:3]
 		dists=[]
-		for abc in ["left/gripper_base","right/gripper_base"]:
-			id = self.m.body(abc).id
-			hand_pos=self.d.xpos[id]
+		for left,right in [["left/left_g0", "left/right_g0"],["left/left_g0", "left/right_g0"]]:
+			lid = self.m.geom(left).id
+			rid = self.m.geom(right).id
+			hand_pos=(self.d.geom_xpos[lid]+self.d.geom_xpos[rid])/2
 			vec=hand_pos-box_pos
 			dist=np.sqrt(np.sum(vec*vec))
 			dists.append(dist)
 		dists=np.array(dists)
-		#print(dists)
+		print(dists)
 		if self.prev_dist is None:
 			self.prev_dist=dists
 			r_pos = np.zeros(2)
 		else:
-			r_pos=self.prev_dist-dists
-
+			r_pos=(self.prev_dist-dists)*10
+			self.prev_dist=dists
 		if self.sense is not None:
 			touch = self.sense.copy()
 			touch[touch<0.0]=1
 			r_touch=np.array([touch[0,0]+touch[0,1],touch[1,0]+touch[1,1]])*0.5
-			r_touch[dists>0.3]=0.0
 		else:
 			r_touch = np.zeros(2)
-		return r_touch+r_pos
+
+		r_height=box_pos[2]-0.23
+		return r_touch+r_pos+r_height
 	def state(self):
 		self.sense=np.array(self.d.sensordata).reshape((2,2))*5
+		dist=self.prev_dist.reshape((2,1))
 		pos=self.d.qpos[7:]
 		vel=self.d.qvel[6:]
 		box_pos=self.d.qpos[:7]
@@ -169,7 +174,7 @@ class armsim2:
 		pos=np.array(pos).reshape((2,8))
 		vel=np.array(vel).reshape((2,8))
 		state=np.concatenate([pos,vel,box_pos,box_vel],axis=1,dtype=np.float32)
-		state=np.concatenate([pos,box_pos,self.sense],axis=1,dtype=np.float32)
+		state=np.concatenate([pos,box_pos,self.sense,dist],axis=1,dtype=np.float32)
 		state=np.clip(state,-10,10)
 		return  state
 
