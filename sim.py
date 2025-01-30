@@ -138,7 +138,7 @@ class armsim2:
 		#TODO: add penalty for falling box
 		box_pos=self.d.qpos[:3]
 		dists=[]
-		for left,right in [["left/left_g0", "left/right_g0"],["left/left_g0", "left/right_g0"]]:
+		for left,right in [["left/left_g0", "left/right_g0"],["right/left_g0", "right/right_g0"]]:
 			lid = self.m.geom(left).id
 			rid = self.m.geom(right).id
 			hand_pos=(self.d.geom_xpos[lid]+self.d.geom_xpos[rid])/2
