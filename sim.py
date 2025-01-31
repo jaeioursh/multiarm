@@ -116,6 +116,8 @@ class armsim2:
 		armpos=[ 0, -0.96, 1.16, 0, -0.3, 0, 0.0084, 0.0084] #for ar m with no gripper
 		self.d.qpos=np.array(box_pos+armpos*2)
 		self.d.qvel=np.array(box_vel+[0]*2*len(armpos))
+		self.d.ctrl[:]=0.0
+		mujoco.mj_step(self.m, self.d)
 		self.step_start=time.time()
 		self.prev_dist=None
 		self.start_dist=None
@@ -146,7 +148,8 @@ class armsim2:
 			dist=np.sqrt(np.sum(vec*vec))
 			dists.append(dist)
 		dists=np.array(dists)
-		print(dists)
+		#print(dists)
+		#print(self.sense)
 		if self.prev_dist is None:
 			self.prev_dist=dists
 			r_pos = np.zeros(2)
@@ -155,15 +158,16 @@ class armsim2:
 			self.prev_dist=dists
 		if self.sense is not None:
 			touch = self.sense.copy()
-			touch[touch<0.0]=1
+			touch=np.abs(touch)
+			touch[touch>0.1]=0.1
 			r_touch=np.array([touch[0,0]+touch[0,1],touch[1,0]+touch[1,1]])*0.5
 		else:
 			r_touch = np.zeros(2)
 
 		r_height=box_pos[2]-0.23
-		return r_touch+r_pos+r_height
+		return r_touch+r_pos#+r_height
 	def state(self):
-		self.sense=np.array(self.d.sensordata).reshape((2,2))*5
+		self.sense=np.array(self.d.sensordata).reshape((2,2))*500
 		dist=self.prev_dist.reshape((2,1))
 		pos=self.d.qpos[7:]
 		vel=self.d.qvel[6:]
