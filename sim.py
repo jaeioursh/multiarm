@@ -104,14 +104,14 @@ class armsim2:
 		else:
 			self.viewer = None
 		self.reset()
-		self.action_dim=7
-		self.state_dim=15 + 2 + 1 #2 finger sensors
+		self.action_dim=self.n_joints//2
+		self.state_dim=len(self.state()[0])
 		self.n_agents=2
 		
 	def reset(self):
 				#pos     quaternion
 		self.time=0
-		box_pos=[-1,0.5,0.23]+[0,0,0,1]
+		box_pos=[-1,0.5,0.13]+[0,0,0,1]
 		box_vel=[0]*6
 		armpos=[ 0, -0.96, 1.16, 0, -0.3, 0, 0.0084, 0.0084] #for ar m with no gripper
 		self.d.qpos=np.array(box_pos+armpos*2)
@@ -164,8 +164,9 @@ class armsim2:
 		else:
 			r_touch = np.zeros(2)
 
-		r_height=box_pos[2]-0.23
+		r_height=box_pos[2]-0.13
 		return r_touch+r_pos#+r_height
+	
 	def state(self):
 		self.sense=np.array(self.d.sensordata).reshape((2,2))*500
 		dist=self.prev_dist.reshape((2,1))
@@ -183,7 +184,7 @@ class armsim2:
 		return  state
 
 	def step(self,action,do_act=True):
-		self.time+=1
+		
 		#print(self.d.ctrl.shape)
 		if do_act:
 			action=np.array(action).flatten()*0.5+0.5
@@ -192,7 +193,9 @@ class armsim2:
 			action = action*(upper-lower)+lower
 			action[[3,4,5,10,11,12]]=0.0 #keep wrist from rotating
 			self.d.ctrl=action
-		mujoco.mj_step(self.m, self.d)
+		for i in range(3):
+			self.time+=1
+			mujoco.mj_step(self.m, self.d)
 		if self.viewer is not None and self.viewer.is_running():
 			self.viewer.sync()
 			time_until_next_step = self.m.opt.timestep - (time.time() - self.step_start)

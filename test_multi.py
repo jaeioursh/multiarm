@@ -11,14 +11,14 @@ def train():
     params=Params(fname="save",n_agents=env.n_agents)
     params.action_dim=env.action_dim
     params.state_dim=env.state_dim
-    params.action_std=-0.8
+    params.action_std=-0.9
     params.beta_ent=0.0
-    params.N_batch=2
+    params.N_batch=6
     params.K_epochs=10
     params.N_steps=3e6
 
     params.aln_hidden=64
-    params.aln_lr=0.0003
+    params.aln_lr=0.000003
     params.aln_train_steps=100
     params.deq_len=100000
 
