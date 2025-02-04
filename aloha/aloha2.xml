@@ -109,7 +109,7 @@
 
     <body name="box_body" pos="0 0 0">
       <joint name="box_joint" type="free"/>
-      <geom type="box" size="0.02 0.02 0.02" rgba="0.8 0.2 0.2 1"/>
+      <geom type="box" size="0.015 0.015 0.015" rgba="0.8 0.2 0.2 1"/>
     </body>
 
  <body name="left/base_link" childclass="vx300s" pos="-0.5 .3 0" quat="1 0 0 1">

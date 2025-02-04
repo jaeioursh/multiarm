@@ -3,10 +3,11 @@ import numpy as np
 from ES import ES 
 
 class MAES:
-	def __init__(self,nagents,shape,popsize,lr,sigma):
-		self.nagents=nagents
-		self.popsize=popsize
-		self.agents=[ES(shape,popsize,lr,sigma) for i in range(nagents)]
+	def __init__(self,params):
+		self.params=params
+		self.nagents=params.nagents
+		self.popsize=params.pop_size
+		self.agents=[ES(params) for i in range(params.nagents)]
 
 	def train(self,R):
 		for r,agent in zip(R,self.agents):
@@ -15,8 +16,10 @@ class MAES:
 	def act(self,states,idx):
 		action=[]
 		for state,agent in zip(states,self.agents):
-			if idx>=0:
-				action.append( agent.pop[idx].feed(state) )
-			else:
+			if idx>0:
+				action.append( agent.pop[idx-1].feed(state) )
+			elif idx==0:
 				action.append( agent.best.feed(state) )
+			else:
+				action.append( agent.hof[abs(idx)-1].feed(state) )
 		return np.array(action)

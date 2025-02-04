@@ -1,97 +1,116 @@
 import numpy as np
- 
+from collections import deque
+from random import sample
+
 class net:
-    def __init__(self,s):
-        self.shape=s
-        self.depth=len(s)-1
-        self.dw=[]
-        self.db=[]
-       
-        self.shuffle()
-        self.e=None
-       
-       
-       
-    def shuffle(self):
-        s=self.shape
-        self.w=[np.random.normal(0,0.05,size=[s[i],s[i+1]]) for i in range(len(s)-1)]
-        self.b=[np.random.normal(0,0.05,size=[1,s[i+1]]) for i in range(len(s)-1)]
+	def __init__(self,s):
+		self.shape=s
+		self.depth=len(s)-1
+		self.dw=[]
+		self.db=[]
+
+		self.shuffle()
+		self.e=None
+	   
+	   
+	   
+	def shuffle(self):
+		s=self.shape
+		self.w=[np.random.normal(0,0.05,size=[s[i],s[i+1]]) for i in range(len(s)-1)]
+		self.b=[np.random.normal(0,0.05,size=[1,s[i+1]]) for i in range(len(s)-1)]
  
-    def copy(self,p):
-        for i in range(len(self.w)):
-            self.w[i]=p.w[i].copy()
-            self.b[i]=p.b[i].copy()
-           
-    def parent(self,p,sigma):
-        self.dw=[]
-        self.db=[]
-        for i in range(len(self.w)):
-            self.w[i]=p.w[i].copy()
-            self.b[i]=p.b[i].copy()
+	def copy(self,p):
+		for i in range(len(self.w)):
+			self.w[i]=p.w[i].copy()
+			self.b[i]=p.b[i].copy()
+		   
+	def parent(self,p,sigma):
+		self.dw=[]
+		self.db=[]
+		for i in range(len(self.w)):
+			self.w[i]=p.w[i].copy()
+			self.b[i]=p.b[i].copy()
  
-            dw=np.random.normal(0,1,size=self.w[i].shape)
-            db=np.random.normal(0,1,size=self.b[i].shape)
-             
-            self.w[i]+=sigma*dw
-            self.b[i]+=sigma*db
+			dw=np.random.normal(0,1,size=self.w[i].shape)
+			db=np.random.normal(0,1,size=self.b[i].shape)
+			 
+			self.w[i]+=sigma*dw
+			self.b[i]+=sigma*db
  
-            self.dw.append(dw)
-            self.db.append(db)           
+			self.dw.append(dw)
+			self.db.append(db)		   
  
-    def h(self,x):
-        return np.tanh(x)
+	def h(self,x):
+		return np.tanh(x)
  
    
-    def feed(self,x):
-       
-        for w,b in zip(self.w,self.b):
-            x=self.h(np.matmul(x,w)+b)
-        return x[0]
+	def feed(self,x):
+	   
+		for w,b in zip(self.w,self.b):
+			x=self.h(np.matmul(x,w)+b)
+		return x[0]
    
 
  
-    def softmax(self,x):
-        return np.exp(x)/sum(np.exp(x))
+	def softmax(self,x):
+		return np.exp(x)/sum(np.exp(x))
    
  
 class ES:
-    def __init__(self,shape,pop_size,lr=0.01,sigma=0.001):
-        self.parent=net(shape)
-        self.pop=[net(shape) for i in range(pop_size)]
-        self.best=net(shape)
-        self.best_r=-1e20
-        self.N=pop_size
-        self.sigma=sigma
-        self.LR=lr
-        self.set_parent()
+	def __init__(self,params):
+		self.parent=net(params.shape)
+		self.pop=[net(params.shape) for i in range(params.pop_size)]
+		self.hof=deque(maxlen=params.hof_size)
+		self.best=net(params.shape)
+		self.best_r=-1e20
+		self.N=params.pop_size
+		self.sigma=params.sigma
+		self.LR=params.lr
+		self.trainstep=0
+		self.shape=params.shape
+		self.hof_freq=params.hof_freq
+		self.set_parent()
    
-    def policies(self):
-        return [p.feed for p in self.pop]
+	def policies(self):
+		return [p.feed for p in self.pop]
    
-    def set_parent(self):
-        for indiv in self.pop:
-            indiv.parent(self.parent,self.sigma)
+	def set_parent(self):
+		for indiv in self.pop:
+			indiv.parent(self.parent,self.sigma)
  
-    def train(self,R):
-        if max(R)>self.best_r:
-            self.best_r=max(R)
-            self.best.copy(self.pop[np.argmax(R)])
-            #print(self.best_r)
-        R=np.array(R)
-        R-=np.mean(R)
-        R/=np.std(R)
-        
-        dw=[np.zeros_like(w) for w in self.parent.w]
-        db=[np.zeros_like(b) for b in self.parent.b]
-        for r,indiv in zip(R,self.pop):
-            for i in range(len(dw)):
-                dw[i]+=r*indiv.dw[i]
-                db[i]+=r*indiv.db[i]
-        for i in range(len(dw)):
-            dw[i]/=self.N*self.sigma
-            db[i]/=self.N*self.sigma
-           
-            self.parent.w[i]+=self.LR*dw[i]
-            self.parent.b[i]+=self.LR*db[i]
-        self.set_parent()
+	def train(self,R):
+		if max(R)>self.best_r:
+			self.best_r=max(R)
+			#print(max(R))
+			self.best.copy(self.pop[np.argmax(R)])
+			self.trainstep=0
+			temp=net(self.shape)
+			temp.copy(self.best)
+			self.hof.append(temp)
+		else:
+			self.trainstep+=1
+
+		if self.trainstep==self.hof_freq:
+			temp=sample(self.hof,1)[0]
+			#self.LR*=0.9
+			self.trainstep=0
+			self.parent.copy(temp)
+		else:
+			R=np.array(R)
+			R-=np.mean(R)
+			R/=np.std(R)
+			
+			dw=[np.zeros_like(w) for w in self.parent.w]
+			db=[np.zeros_like(b) for b in self.parent.b]
+			for r,indiv in zip(R,self.pop):
+				for i in range(len(dw)):
+					dw[i]+=r*indiv.dw[i]
+					db[i]+=r*indiv.db[i]
+			for i in range(len(dw)):
+				dw[i]/=self.N*self.sigma
+				db[i]/=self.N*self.sigma
+			
+				self.parent.w[i]+=self.LR*dw[i]
+				self.parent.b[i]+=self.LR*db[i]
+		self.set_parent()
  

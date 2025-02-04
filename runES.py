@@ -4,11 +4,27 @@ import sys
 import pickle as pkl
 from alignment_network import reward_align
 from MAES import MAES
+class Params:
+	def __init__(self):
+		self.lr=0.0001
+		self.sigma=0.005
+		self.pop_size=64
+		
+		self.nagents=2
 
-def train():
+		self.hof_size=3
+		self.hof_freq=10
+
+		self.shape=None
+
+
+
+def train(fidx):
 	env=armsim2(0)
-	shape=[env.state_dim,64,env.action_dim]
-	learner=MAES(2,shape,popsize=16,lr=0.0001,sigma=0.005)
+	params=Params()
+	params.shape=[env.state_dim,64,env.action_dim]
+	learner=MAES(params)
+	print(params.lr/params.sigma)
 	for gen in range(1000):
 		R=[]
 		for idx in range(learner.popsize):
@@ -16,22 +32,25 @@ def train():
 			state=env.reset()
 			done=False
 			while not done:
-				action=learner.act(state,idx)
+				action=learner.act(state,idx+1)
 				state,G,reward,done=env.step(action)
 				r+=reward
 			R.append(r)
 		R=np.array(R).T
 		print(gen,max(R[0]))
 		learner.train(R)
-		if gen%20==0:
-			with open("logs/ES.dat","wb") as f:
+		if gen%10==0:
+			with open("logs/ES"+str(fidx)+".dat","wb") as f:
 				pkl.dump(learner,f)
 	
-def view(idx):
+def view(fidx,idx):
 	env=armsim2(1)
-	with open("logs/ES.dat","rb") as f:
+	with open("logs/ES"+str(fidx)+".dat","rb") as f:
 		learner=pkl.load(f)
-	for idx in range(1000):
+	params=learner.params
+	for key,val in params.__dict__.items():
+		print(key+" : "+str(val))
+	for i in range(1000):
 		state=env.reset()
 		done=False
 		r=np.zeros(2)
@@ -39,11 +58,13 @@ def view(idx):
 			action=learner.act(state,idx)
 			state,G,reward,done=env.step(action)
 			r+=reward
+			if not env.viewer.is_running():
+				return
 		print(r)
 	
 
 if __name__ == "__main__":
-	if len(sys.argv)==1:
-		train()
+	if len(sys.argv)==2:
+		train(int(sys.argv[1]))
 	else:    
-		view(int(sys.argv[1]))
+		view(int(sys.argv[1]),int(sys.argv[2]))
