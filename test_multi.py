@@ -18,9 +18,12 @@ def train():
     params.N_steps=3e6
 
     params.aln_hidden=64
-    params.aln_lr=0.000003
+    params.aln_lr=0.0003
     params.aln_train_steps=100
-    params.deq_len=100000
+    params.deq_len=100
+    params.use_l1=True
+    params.use_l2=False
+    params.l_penalty=0.1
 
     params.write()
     learner=IPPO(params)
@@ -41,7 +44,7 @@ def train():
                 step+=1
                 action=learner.act(state)
                 state,G,reward,done=env.step(action)
-                #shaping.add(reward,G,state)
+                shaping.add(reward,G,state,done)
                 #reward=shaping.shape(reward,state)
                 #data.append([state[0],G,reward[0]])
                 learner.add_reward_terminal(reward,done)

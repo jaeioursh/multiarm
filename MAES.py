@@ -5,9 +5,9 @@ from ES import ES
 class MAES:
 	def __init__(self,params):
 		self.params=params
-		self.nagents=params.nagents
+		self.n_agents=params.n_agents
 		self.popsize=params.pop_size
-		self.agents=[ES(params) for i in range(params.nagents)]
+		self.agents=[ES(params) for i in range(params.n_agents)]
 
 	def train(self,R):
 		for r,agent in zip(R,self.agents):

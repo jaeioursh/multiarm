@@ -167,7 +167,7 @@ class armsim2:
 		r_height=np.zeros(2)+box_pos[2]-0.13
 		r_height*=5
 		r_height[r_touch<0.2]=0
-		return r_touch+r_pos+r_height
+		return r_touch+r_pos#+r_height
 	
 	def state(self):
 		self.sense=np.array(self.d.sensordata).reshape((2,2))*500
