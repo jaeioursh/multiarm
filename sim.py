@@ -3,7 +3,7 @@ import math
 import mujoco
 import mujoco.viewer
 import numpy as np
-
+from copy import deepcopy as copy
 class armsim3:
 	def __init__(self,view=False):
 		self.m = mujoco.MjModel.from_xml_path('xarm7/scene.xml')
@@ -91,11 +91,12 @@ class armsim3:
 				time.sleep(time_until_next_step)
 			self.step_start=time.time()
 		return self.state(),self.G(),self.local(),self.done()
-
+	
+model2=mujoco.MjModel.from_xml_path('aloha/aloha2.xml')
 class armsim2:
 	def __init__(self,view=False):
 
-		self.m = mujoco.MjModel.from_xml_path('aloha/aloha2.xml')
+		self.m = copy(model2)
 		self.d = mujoco.MjData(self.m)
 		self.n_joints=self.m.nu
 		if view:
@@ -103,11 +104,30 @@ class armsim2:
 			self.viewer.cam.distance = self.m.stat.extent * 5.0
 		else:
 			self.viewer = None
+		
+
+		self.mean=np.array(
+			[ 9.3463612e-01, -9.1866136e-02,  4.4110820e-01,  8.4124222e-05,
+			-7.6736175e-03,  5.1352440e-04,  1.7019460e-02,  1.7215589e-02,
+			4.4196859e-01,  4.4599998e-01, -3.9321145e-01, -1.8936336e-04,
+			1.6230130e-01, -8.9226809e-04,  4.2779222e-03,  4.3749479e-03,
+			-9.3942761e-01,  5.8754832e-01,  2.2086185e-01, -2.7542081e-01,
+			-9.4510145e-02, -2.0561650e-01, -2.9920354e-01, -3.4017769e-01,
+			-2.1428150e-01,  6.9790728e-02]
+			)
+		self.std=np.array(
+			[2.2264232e-01, 1.6604960e-01, 1.7565261e-01, 2.1471947e-03, 6.0605329e-02,
+			7.0219748e-03, 1.2631528e-03, 1.2925949e-03, 1.7655606e+00, 1.5309929e+00,
+			1.1827916e+00, 3.1204186e-02, 3.8374525e-01, 1.6116606e-01, 2.3605334e-02,
+			2.2922672e-02, 3.9514229e-02, 5.9330460e-02, 7.7486612e-02, 1.8418366e-01,
+			1.4370833e-01, 1.6826729e-01, 8.3697116e-01, 7.6881522e-01, 1.5808831e-01,
+			1.2555440e-01]
+			)
 		self.reset()
 		self.action_dim=self.n_joints//2
 		self.state_dim=len(self.state()[0])
 		self.n_agents=2
-		
+
 	def reset(self):
 				#pos     quaternion
 		self.time=0
@@ -132,8 +152,8 @@ class armsim2:
 	def G(self):
 		box_pos=self.d.qpos[:3]
 		x,y,z=box_pos
-		#if z<0.1:
-		#	return x-0.5
+		if z<0.1:
+			return -10
 		return x
 
 	def local(self):
@@ -182,25 +202,9 @@ class armsim2:
 		vel=np.array(vel).reshape((2,8))
 		state=np.concatenate([pos,vel,box_pos,box_vel],axis=1,dtype=np.float32)
 		state=np.concatenate([pos,vel,box_pos,self.sense,dist],axis=1,dtype=np.float32)
-		mean=np.array(
-			[ 9.3463612e-01, -9.1866136e-02,  4.4110820e-01,  8.4124222e-05,
-			-7.6736175e-03,  5.1352440e-04,  1.7019460e-02,  1.7215589e-02,
-			4.4196859e-01,  4.4599998e-01, -3.9321145e-01, -1.8936336e-04,
-			1.6230130e-01, -8.9226809e-04,  4.2779222e-03,  4.3749479e-03,
-			-9.3942761e-01,  5.8754832e-01,  2.2086185e-01, -2.7542081e-01,
-			-9.4510145e-02, -2.0561650e-01, -2.9920354e-01, -3.4017769e-01,
-			-2.1428150e-01,  6.9790728e-02]
-			)
-		std=np.array(
-			[2.2264232e-01, 1.6604960e-01, 1.7565261e-01, 2.1471947e-03, 6.0605329e-02,
-			7.0219748e-03, 1.2631528e-03, 1.2925949e-03, 1.7655606e+00, 1.5309929e+00,
-			1.1827916e+00, 3.1204186e-02, 3.8374525e-01, 1.6116606e-01, 2.3605334e-02,
-			2.2922672e-02, 3.9514229e-02, 5.9330460e-02, 7.7486612e-02, 1.8418366e-01,
-			1.4370833e-01, 1.6826729e-01, 8.3697116e-01, 7.6881522e-01, 1.5808831e-01,
-			1.2555440e-01]
-			)
-		state-=mean
-		state/=std
+		
+		state-=self.mean
+		state/=self.std
 		state=np.clip(state,-10,10)
 		return  state
 

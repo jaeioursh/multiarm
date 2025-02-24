@@ -40,9 +40,10 @@ class alignment_network(nn.Module):
 		loss = -torch.mean(align)#,dim=0)
 		return loss
 
-	def predict(self,r,state):
+	def predict(self,state):
 		state=torch.from_numpy(np.array(state))
-		return r+self.network(state).item()
+		return self.network(state).detach().numpy()
+	
 	def discount_matrix(self,N,gamma):
 		mat=np.zeros((N,N))
 		for i in range(N):
@@ -106,8 +107,8 @@ class reward_align:
 		for r,state,net in zip (R,State,self.nets):
 			net.add_sample(r,G,state,done)
 
-	def shape(self,R,State):
-		return [net.predict(r,state) for r,state,net in zip(R,State,self.nets)]
+	def shape(self,State):
+		return np.array([net.predict(state) for state,net in zip(State,self.nets)])
 	
 	def train(self,idx):
 		agent=0
