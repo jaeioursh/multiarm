@@ -38,7 +38,6 @@ class Params:
 def proc(args):
 	env=armsim2(0)
 	learner,idx=args
-	r=np.zeros(2)
 	state=env.reset()
 	done=False
 	data=[]
@@ -63,12 +62,13 @@ def handle_data(data,shaping,params,gen):
 		states=np.array(states)
 		shaped=shaping.shape([states[:,0,:],states[:,1,:]])
 		shaped=np.sum(shaped,axis=1).flatten()
-		r+=shaped
+		#r+=shaped
 		R.append(r)
-	R=np.array(R)
+	R=np.array(R).T
+	#print(R.shape)
 	params.writer.add_scalar("Learner/G", max(Gs),gen)
-	params.writer.add_scalar("Learner/R0", max(R[:,0]),gen)
-	params.writer.add_scalar("Learner/R1", max(R[:,1]),gen)
+	params.writer.add_scalar("Learner/R0", max(R[0]),gen)
+	params.writer.add_scalar("Learner/R1", max(R[1]),gen)
 	return R
 
 def train(fidx):
@@ -80,7 +80,7 @@ def train(fidx):
 	learner=MAES(params)
 	shaping=reward_align(params)
 	print(params.lr/params.sigma)
-	with mp.Pool(8) as pool:
+	with mp.Pool(12) as pool:
 		for gen in range(10000):
 			
 			args=[(learner,idx) for idx in range(learner.popsize)]
