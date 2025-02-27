@@ -17,18 +17,20 @@ class Params:
 		self.n_agents=2
 
 		self.hof_size=3
-		self.hof_freq=10
+		self.hof_freq=30
 
 		self.shape=None
 
 		self.aln_hidden=64
-		self.aln_lr=0.0003
+		self.aln_lr=0.00001
 		self.aln_batch=16
-		self.aln_train_steps=10
-		self.deq_len=300
-		self.use_l1=True
+		self.aln_train_steps=2
+		self.deq_len=32
+		self.use_l1=False
 		self.use_l2=False
-		self.l_penalty=1.0
+		self.use_weighting=True
+		self.l_penalty=10.0
+		self.update_frq=10
 		self.device="cpu"
 
 		self.writer=SummaryWriter("./logs/es"+str(fidx))
@@ -51,25 +53,36 @@ def proc(args):
 def handle_data(data,shaping,params,gen):
 	R=[]
 	Gs=[]
+	GG=[]
 	for d in data:
-		r=np.zeros(2)
+		r=[]
 		states=[]
+		g=[]
 		for state,G,reward,done in d:
 			shaping.add(reward,G,state,done)
 			states.append(state)
-			Gs.append(G)
-			r+=reward
-		states=np.array(states)
+			g.append(G)
+			r.append(reward)
+		GG.append(sum(g))
+		states,g,r=[np.array(itr) for itr in (states,g,r)]
 		shaped=shaping.shape([states[:,0,:],states[:,1,:]])
-		shaped=np.sum(shaped,axis=1).flatten()
-		#r+=shaped
+		if params.use_weighting:
+			shaped=np.array(shaped).T[0]
+			g=np.array([g,g]).T
+			rshape=r*shaped+g*(1-shaped)
+			rshape=r+g
+			r=np.sum(rshape,axis=0)
+		else:
+			shaped=np.sum(shaped,axis=1).flatten()
+			r=np.sum(r,axis=0)+shaped
 		R.append(r)
 	R=np.array(R).T
 	#print(R.shape)
-	params.writer.add_scalar("Learner/G", max(Gs),gen)
+	params.writer.add_scalar("Learner/G", max(GG),gen)
 	params.writer.add_scalar("Learner/R0", max(R[0]),gen)
 	params.writer.add_scalar("Learner/R1", max(R[1]),gen)
-	return R
+	G=np.array(GG)
+	return R,G
 
 def train(fidx):
 	
@@ -86,10 +99,11 @@ def train(fidx):
 			args=[(learner,idx) for idx in range(learner.popsize)]
 			#data=[proc(arg) for arg in args]
 			data=pool.map(proc,args)
-			R=handle_data(data,shaping,params,gen)
+			R,G=handle_data(data,shaping,params,gen)
 			print(gen)
-			learner.train(R)
-			shaping.train(gen)
+			learner.train(R,G)
+			if gen%params.update_frq==0:
+				shaping.train(gen)
 			if gen%10==0:
 				with open("logs/ES"+str(fidx)+".dat","wb") as f:
 					pkl.dump(learner,f)

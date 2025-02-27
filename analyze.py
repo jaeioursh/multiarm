@@ -128,12 +128,13 @@ class prms():
         self.device="cpu"
         self.state_dim=26
         self.aln_hidden=64
-        self.aln_lr=0.0003
-        self.aln_batch=16
+        self.aln_lr=0.0001
+        self.aln_batch=32
         self.aln_train_steps=1
         self.deq_len=100
 
-        self.use_l1=True
+        self.use_weighting=True
+        self.use_l1=False
         self.use_l2=False
         self.l_penalty=0.1
             
@@ -153,10 +154,11 @@ def alg_test():
         L.append(l)
     L=np.array(L).T
     N=4
+    lbls=["Alignment Loss","Avg. Shaping","Std. Shaping", "Max Shaping"]
     for i in range(N):
         plt.subplot(1,N,i+1)
-        plt.plot(L[i])
-    plt.legend(["Alignment Loss","Avg. Shaping","Std. Shaping", "Max Shaping"])
+        plt.plot(L[i],label=lbls[i])
+        plt.legend()
     plt.show()
 
 

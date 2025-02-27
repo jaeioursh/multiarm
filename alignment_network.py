@@ -11,6 +11,7 @@ class alignment_network(nn.Module):
 		self.use_l1 = params.use_l1
 		self.use_l2 = params.use_l2
 		self.l_penalty=params.l_penalty
+		self.use_weighting=params.use_weighting
 		self.device=params.device
 		hidden=params.aln_hidden
 		self.batch_size=params.aln_batch
@@ -18,13 +19,16 @@ class alignment_network(nn.Module):
 		self.buffer=deque(maxlen=params.deq_len)
 		self.temp_buffer=[[],[],[]]
 		# critic
+		self.sig=nn.Sigmoid()
 		self.network = nn.Sequential(
 						nn.Linear(state_dim, hidden),
 						nn.LeakyReLU(),
 						nn.Linear(hidden, hidden),
 						nn.LeakyReLU(),
-						nn.Linear(hidden, 1)
+						nn.Linear(hidden, 1),
+						nn.Sigmoid()
 					)
+
 		self.opt = torch.optim.Adam(self.network.parameters(),lr=params.aln_lr)
 		self.agent_idx=agent_idx
 		self.step=0
@@ -42,7 +46,10 @@ class alignment_network(nn.Module):
 
 	def predict(self,state):
 		state=torch.from_numpy(np.array(state))
-		return self.network(state).detach().numpy()
+		shaping=self.network(state)
+		if self.use_weighting:
+			shaping=self.sig(shaping)
+		return shaping.detach().numpy()
 	
 	def discount_matrix(self,N,gamma):
 		mat=np.zeros((N,N))
@@ -73,10 +80,16 @@ class alignment_network(nn.Module):
 			r,g,state=self.sample()
 			shaping=self.network(state)
 			S.append(shaping.detach().numpy())
-			shaped=r+shaping
-			shaped=torch.sum(shaped,dim=1)
+
+			if self.use_weighting:
+				shaping=self.sig(shaping)
+				shaped=r*shaping+g*(1-shaping)
+				shaped=torch.sum(shaped,dim=1)
+			else:
+				S.append(shaping.detach().numpy())
+				shaped=r+shaping
+				shaped=torch.sum(shaped,dim=1)
 			g=torch.sum(g,dim=1)
-			self.opt.zero_grad()
 			loss = self.alignment_loss(g,shaped)
 			L.append(loss.detach().item())
 			if self.use_l2:
@@ -86,6 +99,7 @@ class alignment_network(nn.Module):
 
 			loss.backward()
 			self.opt.step()
+			self.opt.zero_grad()
 		return np.mean(L),np.mean(S),np.std(S),np.max(np.abs(S))
 
 

@@ -130,6 +130,7 @@ class armsim2:
 
 	def reset(self):
 				#pos     quaternion
+		mujoco.mj_resetData(self.m, self.d)
 		self.time=0
 		box_pos=[-1,0.5,0.13]+[0,0,0,1]
 		box_vel=[0]*6
@@ -152,12 +153,13 @@ class armsim2:
 	def G(self):
 		box_pos=self.d.qpos[:3]
 		x,y,z=box_pos
-		if z<0.1:
+		if z<0.3:
 			return -10
-		return x
+		if self.sense is not None and np.sum(self.sense)<0.1:
+			return -0.1
+		return x+1
 
 	def local(self):
-		#TODO: add penalty for falling box
 		box_pos=self.d.qpos[:3]
 		dists=[]
 		for left,right in [["left/left_g0", "left/right_g0"],["right/left_g0", "right/right_g0"]]:
@@ -168,8 +170,6 @@ class armsim2:
 			dist=np.sqrt(np.sum(vec*vec))
 			dists.append(dist)
 		dists=np.array(dists)
-		#print(dists)
-		#print(self.sense)
 		if self.prev_dist is None:
 			self.prev_dist=dists
 			r_pos = np.zeros(2)
@@ -236,7 +236,7 @@ if __name__ =="__main__":
 		state=sim.reset()
 		done=False
 		while not done:
-			action=[[0]*7]*2
+			action=[[1]*7]*2
 			state,G,reward,done=sim.step(action)
 			print(state.shape)
 			print(state)

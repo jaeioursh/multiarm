@@ -9,9 +9,9 @@ class MAES:
 		self.popsize=params.pop_size
 		self.agents=[ES(params) for i in range(params.n_agents)]
 
-	def train(self,R):
+	def train(self,R,G):
 		for r,agent in zip(R,self.agents):
-			agent.train(r)
+			agent.train(r,G)
 
 	def act(self,states,idx):
 		action=[]

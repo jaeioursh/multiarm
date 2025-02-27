@@ -78,11 +78,11 @@ class ES:
 		for indiv in self.pop:
 			indiv.parent(self.parent,self.sigma)
  
-	def train(self,R):
-		if max(R)>self.best_r:
-			self.best_r=max(R)
+	def train(self,R,G):
+		if max(G)>self.best_r:
+			self.best_r=max(G)
 			#print(max(R))
-			self.best.copy(self.pop[np.argmax(R)])
+			self.best.copy(self.pop[np.argmax(G)])
 			self.trainstep=0
 			temp=net(self.shape)
 			temp.copy(self.best)
