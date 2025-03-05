@@ -10,21 +10,21 @@ import multiprocessing as mp
 
 class Params:
 	def __init__(self,fidx=None):
-		self.lr=0.0001
-		self.sigma=0.005
-		self.pop_size=32
+		self.lr=0.0005
+		self.sigma=0.001
+		self.pop_size=128
 		
 		self.n_agents=2
 
 		self.hof_size=3
-		self.hof_freq=30
+		self.hof_freq=100000
 
 		self.shape=None
 
 		self.aln_hidden=64
 		self.aln_lr=0.00001
 		self.aln_batch=16
-		self.aln_train_steps=2
+		self.aln_train_steps=1
 		self.deq_len=32
 		self.use_l1=False
 		self.use_l2=False

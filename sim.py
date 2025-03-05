@@ -153,11 +153,11 @@ class armsim2:
 	def G(self):
 		box_pos=self.d.qpos[:3]
 		x,y,z=box_pos
-		if z<0.3:
-			return -10
-		if self.sense is not None and np.sum(self.sense)<0.1:
-			return -0.1
-		return x+1
+		if z<0.1 or z>1.0:
+			return -100
+		if self.prev_dist is not None and min(self.prev_dist)>0.1:
+			return 0.0
+		return (x+1)
 
 	def local(self):
 		box_pos=self.d.qpos[:3]
@@ -174,20 +174,18 @@ class armsim2:
 			self.prev_dist=dists
 			r_pos = np.zeros(2)
 		else:
-			r_pos=(self.prev_dist-dists)*10
+			r_pos=(self.prev_dist-dists)*20
 			self.prev_dist=dists
 		if self.sense is not None:
 			touch = self.sense.copy()
 			touch=np.abs(touch)
 			touch[touch>0.1]=0.1
-			r_touch=np.array([touch[0,0]+touch[0,1],touch[1,0]+touch[1,1]])*2.0
+			r_touch=np.array([touch[0,0]+touch[0,1],touch[1,0]+touch[1,1]])*3.0
 		else:
 			r_touch = np.zeros(2)
 
-		r_height=np.zeros(2)+box_pos[2]-0.13
-		r_height*=5
-		r_height[r_touch<0.2]=0
-		return r_touch+r_pos#+r_height
+
+		return r_touch+r_pos
 	
 	def state(self):
 		self.sense=np.array(self.d.sensordata).reshape((2,2))*500
@@ -203,9 +201,9 @@ class armsim2:
 		state=np.concatenate([pos,vel,box_pos,box_vel],axis=1,dtype=np.float32)
 		state=np.concatenate([pos,vel,box_pos,self.sense,dist],axis=1,dtype=np.float32)
 		
-		state-=self.mean
-		state/=self.std
-		state=np.clip(state,-10,10)
+		#state-=self.mean
+		#state/=self.std
+		#state=np.clip(state,-20,20)
 		return  state
 
 	def step(self,action,do_act=True):
@@ -216,7 +214,7 @@ class armsim2:
 			limits=np.array(self.m.actuator_ctrlrange).T
 			lower,upper=limits
 			action = action*(upper-lower)+lower
-			action[[3,4,5,10,11,12]]=0.0 #keep wrist from rotating
+			#action[[3,4,5,10,11,12]]=0.0 #keep wrist from rotating
 			self.d.ctrl=action
 		for i in range(3):
 			self.time+=1
@@ -235,8 +233,11 @@ if __name__ =="__main__":
 	for i in range(30):
 		state=sim.reset()
 		done=False
+		t=-1
 		while not done:
-			action=[[1]*7]*2
+			t+=0.001
+			action=[[0]*7]*2
+			action[0][i]=t
 			state,G,reward,done=sim.step(action)
 			print(state.shape)
 			print(state)

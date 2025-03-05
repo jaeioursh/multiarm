@@ -24,22 +24,26 @@ class net:
 			self.w[i]=p.w[i].copy()
 			self.b[i]=p.b[i].copy()
 		   
-	def parent(self,p,sigma):
+	def parent(self,p,sigma,mirror=None):
 		self.dw=[]
 		self.db=[]
+		
 		for i in range(len(self.w)):
-			self.w[i]=p.w[i].copy()
-			self.b[i]=p.b[i].copy()
- 
-			dw=np.random.normal(0,1,size=self.w[i].shape)
-			db=np.random.normal(0,1,size=self.b[i].shape)
-			 
-			self.w[i]+=sigma*dw
-			self.b[i]+=sigma*db
- 
-			self.dw.append(dw)
-			self.db.append(db)		   
- 
+			
+				self.w[i]=p.w[i].copy()
+				self.b[i]=p.b[i].copy()
+				if mirror is None:
+					dw=np.random.normal(0,1,size=self.w[i].shape)
+					db=np.random.normal(0,1,size=self.b[i].shape)
+				else:
+					dw=-mirror.dw[i].copy()
+					db=-mirror.db[i].copy()
+				self.w[i]+=sigma*dw
+				self.b[i]+=sigma*db
+	
+				self.dw.append(dw)
+				self.db.append(db)		   
+			
 	def h(self,x):
 		return np.tanh(x)
  
@@ -62,7 +66,7 @@ class ES:
 		self.pop=[net(params.shape) for i in range(params.pop_size)]
 		self.hof=deque(maxlen=params.hof_size)
 		self.best=net(params.shape)
-		self.best_r=-1e20
+		self.best_r=None
 		self.N=params.pop_size
 		self.sigma=params.sigma
 		self.LR=params.lr
@@ -75,10 +79,29 @@ class ES:
 		return [p.feed for p in self.pop]
    
 	def set_parent(self):
-		for indiv in self.pop:
-			indiv.parent(self.parent,self.sigma)
- 
+		
+		for i in range(len(self.pop)):
+			indiv=self.pop[i]
+			if i%2==0:
+				indiv.parent(self.parent,self.sigma)
+			else:
+				indiv.parent(self.parent,self.sigma,self.pop[i-1])
+	def fitshape(self,R):
+		if 0:
+			R=np.array(R)
+			R-=np.mean(R)
+			R/=np.std(R)
+		else:
+			R=np.array(R)
+			K=np.argsort(np.argsort(-R))+1
+			lmbda=len(K)
+			uk=np.log(lmbda/2+1)-np.log(K)
+			uk[uk<0]=0
+			R=uk/np.sum(uk)-1/lmbda
+		return R
 	def train(self,R,G):
+		if self.best_r is None:
+			self.best_r=max(G)
 		if max(G)>self.best_r:
 			self.best_r=max(G)
 			#print(max(R))
@@ -90,15 +113,13 @@ class ES:
 		else:
 			self.trainstep+=1
 
-		if self.trainstep==self.hof_freq:
+		if self.trainstep==self.hof_freq and len(self.hof)>0:
 			temp=sample(self.hof,1)[0]
 			#self.LR*=0.9
 			self.trainstep=0
 			self.parent.copy(temp)
 		else:
-			R=np.array(R)
-			R-=np.mean(R)
-			R/=np.std(R)
+			R=self.fitshape(R)
 			
 			dw=[np.zeros_like(w) for w in self.parent.w]
 			db=[np.zeros_like(b) for b in self.parent.b]
