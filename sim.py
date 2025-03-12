@@ -4,9 +4,11 @@ import mujoco
 import mujoco.viewer
 import numpy as np
 from copy import deepcopy as copy
+
+model3=mujoco.MjModel.from_xml_path('ur5e/multiscene.xml')
 class armsim3:
 	def __init__(self,view=False):
-		self.m = mujoco.MjModel.from_xml_path('xarm7/scene.xml')
+		self.m = copy(model3)
 		self.d = mujoco.MjData(self.m)
 		self.n_joints=self.m.nu
 		if view:
@@ -15,18 +17,18 @@ class armsim3:
 		else:
 			self.viewer = None
 		self.reset()
-		self.action_dim=8
+		self.action_dim=6
 		self.state_dim=39
-		self.n_agents=3
+		self.n_agents=2
 		
 	def reset(self):
 				#pos     quaternion
 		self.time=0
 		box_pos=[-1,0.5,0.23]+[0,0,0,1]
 		box_vel=[0]*6
-		armpos=[0, -.247, 0, .909, 0, 1.15644, 0, 0, 0, 0, 0, 0, 0] #for ar m with no gripper
-		self.d.qpos=np.array(box_pos+armpos*3)
-		self.d.qvel=np.array(box_vel+[0]*3*len(armpos))
+		armpos=[-1.5708, -1.5708, 1.5708, -1.5708, -1.5708, 0] #for ar m with no gripper
+		self.d.qpos=np.array(box_pos+armpos*self.n_agents)
+		self.d.qvel=np.array(box_vel+[0]*self.n_agents*len(armpos))
 		self.step_start=time.time()
 		self.prev_dist=None
 		self.prev_box=None
@@ -45,44 +47,25 @@ class armsim3:
 
 	def local(self):
 		box_pos=self.d.qpos[:3]
-		dists=[]
-		for abc in ["a","b","c"]:
-			id = self.m.body('right_finger_'+abc).id
-			hand_pos=self.d.xpos[id]
-			vec=hand_pos-box_pos
-			dist=np.sqrt(np.sum(vec*vec))
-			dists.append(dist)
-		dists=np.array(dists)
-		if self.prev_dist is None:
-			self.prev_dist=dists
-			return np.zeros(3)
-		else:
-			'''
-			r=self.prev_dist-dists
-			self.prev_dist=dists
-			r*=3
-			r[r<0]*=2
-			'''
-			r=-dists
-			return r
+		
+		return None
 	
 	def state(self):
 		pos=self.d.qpos[7:]
 		vel=self.d.qvel[6:]
 		box_pos=self.d.qpos[:7]
 		box_vel=self.d.qvel[:6]
-		box_pos=np.tile(box_pos, (3,1))
-		box_vel=np.tile(box_vel, (3,1))
-		pos=np.array(pos).reshape((3,13))
-		vel=np.array(vel).reshape((3,13))
+		box_pos=np.tile(box_pos, (self.n_agents,1))
+		box_vel=np.tile(box_vel, (self.n_agents,1))
+		pos=np.array(pos).reshape((self.n_agents,self.action_dim))
+		vel=np.array(vel).reshape((self.n_agents,self.action_dim))
 		state=np.concatenate([pos,vel,box_pos,box_vel],axis=1,dtype=np.float32)
-		state=np.clip(state,-20,20)
 		return  state
 
 	def step(self,action):
 		self.time+=1
 		#print(self.d.ctrl.shape)
-		self.d.ctrl=np.array(action).flatten()*3.0
+		self.d.ctrl=np.array(action).flatten()
 		mujoco.mj_step(self.m, self.d)
 		if self.viewer is not None and self.viewer.is_running():
 			self.viewer.sync()

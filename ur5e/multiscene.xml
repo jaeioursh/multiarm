@@ -87,17 +87,20 @@
     <body name="robot_arm_b" pos="0 0 0">
       <include file="ur5eb.xml"/>
     </body>
+    <!--
     <body name="robot_arm_c" pos="1 0 0">
       <include file="ur5ec.xml"/>
     </body>
-    
+    -->
   </worldbody>
  
 
   <actuator>
     <include file="ur5a_act.xml"/>
     <include file="ur5b_act.xml"/>
+    <!--
     <include file="ur5c_act.xml"/>
+    -->
   </actuator>
   
 </mujoco>
