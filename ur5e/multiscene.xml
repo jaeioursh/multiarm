@@ -77,6 +77,10 @@
     <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
     <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
     
+    <body name="pedistal" pos="-0.6 0.5 0.05">
+      <geom type="box" size="0.05 0.05 0.05" rgba="0.8 0.8 0.8 1" density="100" friction= "2 0.005 0.0001"/>
+    </body>
+
     <body name="box_body" pos="0 0 0">
       <joint name="box_joint" type="free"/>
       <geom type="box" size="0.05 0.05 0.05" rgba="0.8 0.2 0.2 1"/>
@@ -102,5 +106,16 @@
     <include file="ur5c_act.xml"/>
     -->
   </actuator>
+
+  <sensor>
+  <distance body1="A_wrist_3_link" body2="box_body"/>
+  <distance body1="B_wrist_3_link" body2="box_body"/>
+  <!--
+  <touch name="left/left_finger_touch" site="left/left_finger"/>
+  <touch name="left/right_finger_touch" site="left/right_finger"/>
+  <touch name="right/left_finger_touch" site="right/left_finger"/>
+  <touch name="right/right_finger_touch" site="right/right_finger"/>
+  -->
+  </sensor>
   
 </mujoco>
