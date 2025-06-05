@@ -117,5 +117,11 @@
   <touch name="right/right_finger_touch" site="right/right_finger"/>
   -->
   </sensor>
+
+ <equality>
+    <!-- Weld constraint to "attach" body to site -->
+    <weld name="A_attach" body1="A_wrist_3_link" body2="box_body" active="false"/>
+    <weld name="B_attach" body1="B_wrist_3_link" body2="box_body" active="false"/>
+  </equality>
   
 </mujoco>

@@ -136,18 +136,19 @@ def test_arch():
 
 def IK_test():
 
-    sim = armsim(True)
+    sim = armsim(False)
     ik = IK()
     targets = []
     cutoff = 200
     for j in range(10000):
+        print(j)
         sim.reset()
         done = False
         i = 0
 
         while not done:
             i += 1
-            if j == 0:
+            if j >= 0:
                 box_quat1 = np.array([0.7071, 0, 0.7071, 0])
                 box_quat2 = np.copy([0.7071, 0, -0.7071, 0])
 
@@ -159,8 +160,8 @@ def IK_test():
                 ik.set_targets([box_pos-d_pos, box_pos+d_pos],
                                [box_quat1, box_quat2])
                 action = ik.get_q(sim.m, sim.d, 2)
-                if i == cutoff:
-                    targets.append(action)
+                # if i == cutoff:
+                #    targets.append(action)
                 if i < cutoff:
                     action[4] = -0.6
                     action[5] = 0.75
@@ -172,12 +173,12 @@ def IK_test():
                     action = targets[1]
 
             state, G, reward, done = sim.step(action)
-            if done and j == 0:
-                targets.append(action)
+            # if done and j == 0:
+            #    targets.append(action)
 
-        print(action[:6])
+        # print(action[:6])
 
 
 if __name__ == '__main__':
-    # IK_test()
-    test_arch()
+    IK_test()
+    # test_arch()

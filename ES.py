@@ -118,6 +118,22 @@ class MultiHeadNet(Net):
         return np.array(outs)
 
 
+class MultiHeadNetRes(MultiHeadNet):
+    def __init__(self, shape):
+        shape = [s for s in shape]
+        shape[1] *= 2  # double number of heads (high res/low res)
+        super().__init__(shape)
+
+    def feed(self, x):
+        outs = super().feed(x)
+        n_heads = self.n_heads//2
+        low = outs[:n_heads]
+        high = outs[n_heads:]
+        high *= 0.7
+        low = np.round(low*10)/10
+        return low+high
+
+
 class ES:
     def __init__(self, params):
         self.net_type = params.net_type

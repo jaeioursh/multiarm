@@ -1,6 +1,6 @@
 
 import numpy as np
-from ES import ES
+from ES import ES, MultiHeadNetRes
 
 
 class MAES:
