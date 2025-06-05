@@ -1,10 +1,9 @@
 from PPO import Params
 from IPPO import IPPO
-from sim import armsim3 as armsim
+from sim import armsim
 import numpy as np
 import sys
 import pickle as pkl
-from alignment_network import reward_align
 
 
 def train():
